@@ -107,7 +107,7 @@ module.exports = NodeHelper.create( {
 
         this.payload.lastUpdate = new Date( );
         this.payload.loaded = true;
-        this.sendSocketNotification( "BUS", this.payload );
+        this.sendSocketNotification( "JOURNEYS", this.payload );
     }
 
 } );
