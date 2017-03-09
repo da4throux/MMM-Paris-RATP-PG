@@ -93,16 +93,16 @@ module.exports = NodeHelper.create( {
     // inherited and adapted from
     // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
     processJourneys: function ( data ) {
-        this.journeys.allJourneys = data.routePlannerResult.journeys;
+        this.payload.allJourneys = data.routePlannerResult.journeys;
 
-        this.journeys.maxDepartureHour = data.routePlannerResult.query.timeBounds.maxDepartureHour;
-        this.journeys.minArrivalHour = data.routePlannerResult.query.timeBounds.minArrivalHour;
+        this.payload.maxDepartureHour = data.routePlannerResult.query.timeBounds.maxDepartureHour;
+        this.payload.minArrivalHour = data.routePlannerResult.query.timeBounds.minArrivalHour;
 
-        this.journeys.roadMode = data.routePlannerResult.query.raodMode;
+        this.payload.roadMode = data.routePlannerResult.query.roadMode;
 
-        this.journeys.lastUpdate = new Date( );
-        this.journeys.loaded = true;
-        this.sendSocketNotification( "BUS", this.journeys );
+        this.payload.lastUpdate = new Date( );
+        this.payload.loaded = true;
+        this.sendSocketNotification( "BUS", this.payload );
     }
 
 } );

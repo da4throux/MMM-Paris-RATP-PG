@@ -57,7 +57,16 @@ Module.register( "MMM-Toulouse-Transports", {
     start: function ( ) {
         Log.info( "Starting module: " + this.name );
         this.sendSocketNotification( 'SET_CONFIG', this.config );
-        this.journeys = [ ];
+        this.allJourneys = [];
+
+        this.maxDepartureHour = '';
+        this.minArrivalHour = '';
+
+        this.roadMode = '';
+
+        this.lastUpdate = 'never updated';
+        this.loaded = true;
+
         this.loaded = false;
         this.updateTimer = null;
         var self = this;
@@ -148,7 +157,7 @@ Module.register( "MMM-Toulouse-Transports", {
     socketNotificationReceived: function ( notification, payload ) {
         switch ( notification ) {
             case "JOURNEYS":
-                this.journeys = payload.allJourneys;
+                this.allJourneys = payload.allJourneys;
                 this.roadMode = payload.roadMode;
 
                 this.maxDepartureHour = payload.maxDepartureHour;
