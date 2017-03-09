@@ -93,6 +93,11 @@ module.exports = NodeHelper.create( {
     // inherited and adapted from
     // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
     processJourneys: function ( data ) {
+        if ( this.config.debug ) {
+            console.log("Processing - the received data: " + data);
+            console.log("Processing - the this" + this);
+        }
+        this.payload = {};
         this.payload.allJourneys = data.routePlannerResult.journeys;
 
         this.payload.maxDepartureHour = data.routePlannerResult.query.timeBounds.maxDepartureHour;
