@@ -1,7 +1,7 @@
 // config is expected as follows:
 /*
 config: {
-    apikey: 'YOUR TOULOUSE TRANSPORTS API KEY',
+    apiKey: 'YOUR TOULOUSE TRANSPORTS API KEY',
     departurePlace: '', // free text address
     arrivalPlace: '', // free text adddress
     firstDepartureDatetime: '', // YYYY-MMDD HH:MM
