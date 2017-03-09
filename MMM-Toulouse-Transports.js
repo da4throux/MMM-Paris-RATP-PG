@@ -30,7 +30,7 @@ config: {
 
 Module.register( "MMM-Toulouse-Transports", {
     defaults: {
-        apiKey: '', // should be removed
+        //apiKey: '', // should be removed
 
         // inherited from
         // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
