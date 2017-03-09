@@ -95,7 +95,7 @@ module.exports = NodeHelper.create( {
     processJourneys: function ( data ) {
         if ( this.config.debug ) {
             console.log("Processing - the received data: " + JSON.stringify(data));
-            console.log("Processing - the received data: " + JSON.stringify(data.routePlannerResult.journeys);
+            console.log("Processing - the received data: " + JSON.stringify(data.routePlannerResult.journeys));
         }
         this.payload = {};
         this.payload.allJourneys = data.routePlannerResult.journeys;
