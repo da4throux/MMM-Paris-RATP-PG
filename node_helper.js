@@ -94,8 +94,8 @@ module.exports = NodeHelper.create( {
     // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
     processJourneys: function ( data ) {
         if ( this.config.debug ) {
-            console.log("Processing - the received data: " + data);
-            console.log("Processing - the this" + this);
+            console.log("Processing - the received data: " + JSON.stringify(data));
+            console.log("Processing - the this" + JSON.stringify(this));
         }
         this.payload = {};
         this.payload.allJourneys = data.routePlannerResult.journeys;
