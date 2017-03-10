@@ -147,17 +147,17 @@ Module.register( "MMM-Toulouse-Transports", {
                 //'<i class="fa fa-street-view" aria-hidden="true"></i>';
                 if(chunks[ stepIndex ]["street"] != null){
                     icon.classList.add("fa-li", "fa", "fa-blind");
-                    instructionsCell.appendChild(icon);
+                    row.appendChild(icon);
                     instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
                 }
                 else if (chunks[ stepIndex ]["stop"] != null) {
                     icon.classList.add("fa-li", "fa", "fa-bus");
-                    instructionsCell.appendChild(icon);
+                    row.appendChild(icon);
                     instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
                 }
                 else if (chunks[ stepIndex ]["service"] != null) {
                     icon.classList.add("fa-li", "fa", "fa-info-circle");
-                    instructionsCell.appendChild(icon);
+                    row.appendChild(icon);
                     instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
                 }
                 // put cell in row, and add it to table
