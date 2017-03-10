@@ -139,16 +139,26 @@ Module.register( "MMM-Toulouse-Transports", {
                 var instructionsCell = document.createElement( "td" );
                 instructionsCell.style.textAlign = 'left';
 
+                var icon = document.createElement("i");
+
+
                 // <i class="fa fa-subway" aria-hidden="true"></i>
                 // <i class="fa fa-train" aria-hidden="true"></i>
+                //'<i class="fa fa-street-view" aria-hidden="true"></i>';
                 if(chunks[ stepIndex ]["street"] != null){
-                    instructionsCell.innerHTML = '<i class="fa fa-blind" aria-hidden="true">'+ chunks[ stepIndex ].street.text.text+'</i>';//'<i class="fa fa-street-view" aria-hidden="true"></i>';
+                    icon.classList.add("fa-li", "fa", "fa-blind");
+                    instructionsCell.appendChild(icon);
+                    instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
                 }
                 else if (chunks[ stepIndex ]["stop"] != null) {
-                    instructionsCell.innerHTML = '<i class="fa fa-bus" aria-hidden="true">' + chunks[ stepIndex ].stop.text.text + '</i>';
+                    icon.classList.add("fa-li", "fa", "fa-bus");
+                    instructionsCell.appendChild(icon);
+                    instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
                 }
                 else if (chunks[ stepIndex ]["service"] != null) {
-                    instructionsCell.innerHTML = '<i class="fa fa-info-circle" aria-hidden="true">'+chunks[ stepIndex ].service.text.text+'</i>';
+                    icon.classList.add("fa-li", "fa", "fa-info-circle");
+                    instructionsCell.appendChild(icon);
+                    instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
                 }
                 // put cell in row, and add it to table
                 row.appendChild( instructionsCell );
