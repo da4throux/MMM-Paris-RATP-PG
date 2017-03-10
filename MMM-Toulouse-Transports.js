@@ -94,6 +94,18 @@ Module.register( "MMM-Toulouse-Transports", {
         return header;
     },
 
+    // once we decide not to use the basic awesomefonts
+    /*getStyles: function (){
+        return [];
+    }*/
+
+
+
+
+
+
+
+
     // inherited and adapted from
     // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
     // Override dom generator.
@@ -133,17 +145,20 @@ Module.register( "MMM-Toulouse-Transports", {
             while ( stepIndex < chunks.length ) {
                 var row = document.createElement( "tr" );
                 var instructionsCell = document.createElement( "td" );
+                instructionsCell.style.textAlign = 'left';
 
+                // <i class="fa fa-subway" aria-hidden="true"></i>
+                // <i class="fa fa-train" aria-hidden="true"></i>
                 if(chunks[ stepIndex ]["street"] != null){
-                    instructionsCell.innerHTML = 'walk ';//<i class="ionicons ion-android-walk"></i>'
+                    instructionsCell.innerHTML = '<i class="fa fa-blind" aria-hidden="true"></i>';//'<i class="fa fa-street-view" aria-hidden="true"></i>';
                     instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
                 }
                 else if (chunks[ stepIndex ]["stop"] != null) {
-                    instructionsCell.innerHTML = 'stop';//<i class="material-icons">transfer_within_a_station</i>'
+                    instructionsCell.innerHTML = '<i class="fa fa-bus" aria-hidden="true"></i>';
                     instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
                 }
                 else if (chunks[ stepIndex ]["service"] != null) {
-                    instructionsCell.innerHTML = '<i class="glyphicon glyphicon-info-sign"></i>';
+                    instructionsCell.innerHTML = '<i class="fa fa-info-circle" aria-hidden="true"></i>';
                     instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
                 }
                 // put cell in row, and add it to table
