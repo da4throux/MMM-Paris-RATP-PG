@@ -115,14 +115,14 @@ Module.register( "MMM-Toulouse-Transports", {
         for ( var journeyIndex = 0; journeyIndex < this.config.maximumEntries; journeyIndex++ ) {
 
             if (this.config.debug) {
-                console.log("JOURNEYS - " + JSON.stringify(this.journeys));
+                console.log("JOURNEYS - " + JSON.stringify(this.allJourneys));
             }
 
-            if(this.journeys[ journeyIndex ]["journey"] != null) {
-                var departureDateTime = this.journeys[ journeyIndex ].journey.departureDateTime;
-                var arrivalDateTime = this.journeys[ journeyIndex ].journey.arrivalDateTime;
-                var duration = this.journeys[ journeyIndex ].journey.duration;
-                var chunks = this.journeys[ journeyIndex ].journey.chunks;
+            //if(this.allJourneys[ journeyIndex ]["journey"] != null) {
+                var departureDateTime = this.allJourneys[ journeyIndex ].journey.departureDateTime;
+                var arrivalDateTime = this.allJourneys[ journeyIndex ].journey.arrivalDateTime;
+                var duration = this.allJourneys[ journeyIndex ].journey.duration;
+                var chunks = this.allJourneys[ journeyIndex ].journey.chunks;
 
                 var stepIndex = 0;
 
@@ -151,7 +151,7 @@ Module.register( "MMM-Toulouse-Transports", {
 
                     // go next instruction
                     stepIndex++;
-                }
+                //}
             }
         }
         return wrapper;
