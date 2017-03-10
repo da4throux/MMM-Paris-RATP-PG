@@ -31,7 +31,8 @@ config: {
 Module.register( "MMM-Toulouse-Transports", {
     defaults: {
         //apiKey: '', // should be removed
-
+        maxTransferNumber: '5',
+        giveDetailedInstructions: false,
         // inherited from
         // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
         maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
@@ -144,7 +145,7 @@ Module.register( "MMM-Toulouse-Transports", {
                 // <i class="fa fa-subway" aria-hidden="true"></i>
                 // <i class="fa fa-train" aria-hidden="true"></i>
                 //'<i class="fa fa-street-view" aria-hidden="true"></i>';
-                if(chunks[ stepIndex ]["street"] != null){
+                if(this.config.giveDetailedInstructions && chunks[ stepIndex ]["street"] != null){
                     icon.classList.add("fa-li", "fa", "fa-blind");
                     listElement.appendChild(icon);
 
@@ -157,7 +158,7 @@ Module.register( "MMM-Toulouse-Transports", {
                     listElement.innerHTML += chunks[ stepIndex ].stop.text.text;
                 }
                 else if (chunks[ stepIndex ]["service"] != null) {
-                    icon.classList.add("fa-li", "fa", "fa-info-circle");
+                    icon.classList.add("fa-li", "fa", "fa-exchange");
                     listElement.appendChild(icon);
 
                     listElement.innerHTML += chunks[ stepIndex ].service.text.text;
