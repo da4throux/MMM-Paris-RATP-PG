@@ -116,8 +116,6 @@ Module.register( "MMM-Toulouse-Transports", {
 
             if (this.config.debug) {
                 console.log("JOURNEYS - " + JSON.stringify(this.journeys));
-                this.journeys = JSON.read(this.journeys);
-                console.log("JOURNEYS - index 0 " + JSON.stringify(this.journeys[0]));
             }
 
             if(this.journeys[ journeyIndex ]["journey"] != null) {
