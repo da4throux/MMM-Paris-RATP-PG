@@ -114,44 +114,44 @@ Module.register( "MMM-Toulouse-Transports", {
 
         for ( var journeyIndex = 0; journeyIndex < this.config.maximumEntries; journeyIndex++ ) {
 
-            if (this.config.debug) {
+            /*if (this.config.debug) {
                 console.log("JOURNEYS - " + JSON.stringify(this.allJourneys));
+            }*/
+            var departureDateTime = this.allJourneys[ journeyIndex ].journey.departureDateTime;
+            var arrivalDateTime = this.allJourneys[ journeyIndex ].journey.arrivalDateTime;
+            var duration = this.allJourneys[ journeyIndex ].journey.duration;
+
+
+            //
+            var chunks = this.allJourneys[ journeyIndex ].journey.chunks;
+            if (this.config.debug) {
+                console.log("JOURNEYS - There are " + chunks.length + " chunk(s)");
             }
 
-            //if(this.allJourneys[ journeyIndex ]["journey"] != null) {
-                var departureDateTime = this.allJourneys[ journeyIndex ].journey.departureDateTime;
-                var arrivalDateTime = this.allJourneys[ journeyIndex ].journey.arrivalDateTime;
-                var duration = this.allJourneys[ journeyIndex ].journey.duration;
-                var chunks = this.allJourneys[ journeyIndex ].journey.chunks;
+            var stepIndex = 0;
 
-                var stepIndex = 0;
+            while ( stepIndex < chunks.length ) {
+                var row = document.createElement( "tr" );
+                var instructionsCell = document.createElement( "td" );
 
-                while ( stepIndex < /*dev temp. remove when layount finished*/ 1 /*chunks.length*/ ) {
-                    var row = document.createElement( "tr" );
-                    var instructionsCell = document.createElement( "td" );
+                if(chunks[ stepIndex ]["street"] != null){
+                    instructionsCell.innerHTML = 'walk ';//<i class="ionicons ion-android-walk"></i>'
+                    instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
+                }
+                else if (chunks[ stepIndex ]["stop"] != null) {
+                    instructionsCell.innerHTML = 'stop';//<i class="material-icons">transfer_within_a_station</i>'
+                    instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
+                }
+                else if (chunks[ stepIndex ]["service"] != null) {
+                    instructionsCell.innerHTML = '<i class="glyphicon glyphicon-info-sign"></i>';
+                    instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
+                }
+                // put cell in row, and add it to table
+                row.appendChild( instructionsCell );
+                table.appendChild( row );
 
-                    if(chunks[ stepIndex ]["street"] != null){
-                        instructionsCell.innerHTML = 'walk ';//<i class="ionicons ion-android-walk"></i>'
-                        instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
-                    }
-                    else if (chunks[ stepIndex ]["stop"] != null) {
-                        instructionsCell.innerHTML = 'stop';//<i class="material-icons">transfer_within_a_station</i>'
-                        instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
-                    }
-                    else if (chunks[ stepIndex ]["service"] != null) {
-                        instructionsCell.innerHTML = '<i class="glyphicon glyphicon-info-sign"></i>';
-                        instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
-                    }
-                    // append text
-
-
-                    // put cell in row, and add it to table
-                    row.appendChild( instructionsCell );
-                    table.appendChild( row );
-
-                    // go next instruction
-                    stepIndex++;
-                //}
+                // go next instruction
+                stepIndex++;
             }
         }
         return wrapper;
