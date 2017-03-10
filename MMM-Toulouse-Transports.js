@@ -116,7 +116,7 @@ Module.register( "MMM-Toulouse-Transports", {
 
             if (this.config.debug) {
                 console.log("JOURNEYS - " + JSON.stringify(this.journeys));
-                console.log("JOURNEYS - index 0 " + JSON.stringify(this.journeys[0]));
+                //console.log("JOURNEYS - index 0 " + JSON.stringify(this.journeys[0]));
             }
 
 
