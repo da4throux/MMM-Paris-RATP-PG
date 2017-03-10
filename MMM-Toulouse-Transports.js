@@ -111,9 +111,9 @@ Module.register( "MMM-Toulouse-Transports", {
             return wrapper;
         }
 
-        var table = document.createElement( "table" );
-        wrapper.appendChild( table );
-        table.className = "small";
+        var uList = document.createElement( "ul" );
+        wrapper.appendChild( uList );
+        uList.className = "small";
 
 
         for ( var journeyIndex = 0; journeyIndex < this.config.maximumEntries; journeyIndex++ ) {
@@ -135,9 +135,8 @@ Module.register( "MMM-Toulouse-Transports", {
             var stepIndex = 0;
 
             while ( stepIndex < chunks.length ) {
-                var row = document.createElement( "tr" );
-                var instructionsCell = document.createElement( "td" );
-                instructionsCell.style.textAlign = 'left';
+                var listElement = document.createElement( "li" );
+                listElement.style.textAlign = 'left';
 
                 var icon = document.createElement("i");
 
@@ -147,22 +146,20 @@ Module.register( "MMM-Toulouse-Transports", {
                 //'<i class="fa fa-street-view" aria-hidden="true"></i>';
                 if(chunks[ stepIndex ]["street"] != null){
                     icon.classList.add("fa-li", "fa", "fa-blind");
-                    row.appendChild(icon);
-                    instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
+                    listElement.appendChild(icon);
+                    listElement.innerHTML += chunks[ stepIndex ].street.text.text;
                 }
                 else if (chunks[ stepIndex ]["stop"] != null) {
                     icon.classList.add("fa-li", "fa", "fa-bus");
-                    row.appendChild(icon);
-                    instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
+                    listElement.appendChild(icon);
+                    listElement.innerHTML += chunks[ stepIndex ].stop.text.text;
                 }
                 else if (chunks[ stepIndex ]["service"] != null) {
                     icon.classList.add("fa-li", "fa", "fa-info-circle");
-                    row.appendChild(icon);
-                    instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
+                    listElement.appendChild(icon);
+                    listElement.innerHTML += chunks[ stepIndex ].service.text.text;
                 }
-                // put cell in row, and add it to table
-                row.appendChild( instructionsCell );
-                table.appendChild( row );
+                uList.appendChild( listElement );
 
                 // go next instruction
                 stepIndex++;
