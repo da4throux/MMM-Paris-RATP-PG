@@ -112,7 +112,7 @@ Module.register( "MMM-Toulouse-Transports", {
         }
 
         var uList = document.createElement( "ul" );
-        wrapper.appendChild( uList );
+        uList.classList.add("fa-ul");
         uList.className = "small";
 
 
@@ -147,16 +147,19 @@ Module.register( "MMM-Toulouse-Transports", {
                 if(chunks[ stepIndex ]["street"] != null){
                     icon.classList.add("fa-li", "fa", "fa-blind");
                     listElement.appendChild(icon);
+
                     listElement.innerHTML += chunks[ stepIndex ].street.text.text;
                 }
                 else if (chunks[ stepIndex ]["stop"] != null) {
                     icon.classList.add("fa-li", "fa", "fa-bus");
                     listElement.appendChild(icon);
+
                     listElement.innerHTML += chunks[ stepIndex ].stop.text.text;
                 }
                 else if (chunks[ stepIndex ]["service"] != null) {
                     icon.classList.add("fa-li", "fa", "fa-info-circle");
                     listElement.appendChild(icon);
+
                     listElement.innerHTML += chunks[ stepIndex ].service.text.text;
                 }
                 uList.appendChild( listElement );
@@ -165,6 +168,7 @@ Module.register( "MMM-Toulouse-Transports", {
                 stepIndex++;
             }
         }
+        wrapper.appendChild( uList );
         return wrapper;
     },
 
