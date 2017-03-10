@@ -94,17 +94,9 @@ Module.register( "MMM-Toulouse-Transports", {
         return header;
     },
 
-    // once we decide not to use the basic awesomefonts
-    /*getStyles: function (){
-        return [];
-    }*/
-
-
-
-
-
-
-
+    getStyles: function () {
+        return ['font-awesome.css'];
+    },
 
     // inherited and adapted from
     // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
