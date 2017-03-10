@@ -136,10 +136,10 @@ Module.register( "MMM-Toulouse-Transports", {
 
             while ( stepIndex < chunks.length ) {
                 var listElement = document.createElement( "li" );
-                listElement.style.textAlign = 'left';
+                listElement.classList.add("fa");
+                //listElement.style.textAlign = 'left';
 
                 var icon = document.createElement("i");
-
 
                 // <i class="fa fa-subway" aria-hidden="true"></i>
                 // <i class="fa fa-train" aria-hidden="true"></i>
