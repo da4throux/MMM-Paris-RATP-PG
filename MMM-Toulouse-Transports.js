@@ -113,40 +113,47 @@ Module.register( "MMM-Toulouse-Transports", {
 
 
         for ( var journeyIndex = 0; journeyIndex < this.config.maximumEntries; journeyIndex++ ) {
-            var departureDateTime = this.journeys[ journeyIndex ].journey.departureDateTime;
-            var arrivalDateTime = this.journeys[ journeyIndex ].journey.arrivalDateTime;
-            var duration = this.journeys[ journeyIndex ].journye.duration;
-            var chunks = this.journeys[ journeyIndex ].journey.chunks;
 
-            var stepIndex = 0;
+            if (this.config.debug) {
+                console.log("JOURNEYS - " + JSON.stringify(this.journeys));
+                console.log("JOURNEYS - index 0 " + JSON.stringify(this.journeys[0]));
+            }
 
-            while ( stepIndex < /*dev temp. remove when layount finished*/ 0 /*chunks.length*/ ) {
-                var row = document.createElement( "tr" );
-                var instructionsCell = document.createElement( "td" );
-                var journeyElementKind = chunks[ stepIndex ][ 0 ];
 
-                // TODO : use a key,value map to reduce branches
-                // put nice icon
-                switch ( journeyElementKind ) {
-                    case "street":
-                        instructionsCell.innerHTML = '<i class="ionicons ion-android-walk"></i>'
-                        break;
-                    case "stop":
-                        instructionsCell.innerHTML = '<i class="material-icons">transfer_within_a_station</i>'
-                        break;
-                    case "service":
-                        instructionsCell.innerHTML = '<i class="glyphicon glyphicon-info-sign"></i>'
-                        break;
+            if(this.journeys[ journeyIndex ]["journey"] != null) {
+                var departureDateTime = this.journeys[ journeyIndex ].journey.departureDateTime;
+                var arrivalDateTime = this.journeys[ journeyIndex ].journey.arrivalDateTime;
+                var duration = this.journeys[ journeyIndex ].journey.duration;
+                var chunks = this.journeys[ journeyIndex ].journey.chunks;
+
+                var stepIndex = 0;
+
+                while ( stepIndex < /*dev temp. remove when layount finished*/ 1 /*chunks.length*/ ) {
+                    var row = document.createElement( "tr" );
+                    var instructionsCell = document.createElement( "td" );
+
+                    if(chunks[ stepIndex ]["street"] != null){
+                        instructionsCell.innerHTML = 'walk ';//<i class="ionicons ion-android-walk"></i>'
+                        instructionsCell.innerHTML += chunks[ stepIndex ].street.text.text;
+                    }
+                    else if (chunks[ stepIndex ]["stop"] != null) {
+                        instructionsCell.innerHTML = 'stop';//<i class="material-icons">transfer_within_a_station</i>'
+                        instructionsCell.innerHTML += chunks[ stepIndex ].stop.text.text;
+                    }
+                    else if (chunks[ stepIndex ]["service"] != null) {
+                        instructionsCell.innerHTML = '<i class="glyphicon glyphicon-info-sign"></i>';
+                        instructionsCell.innerHTML += chunks[ stepIndex ].service.text.text;
+                    }
+                    // append text
+
+
+                    // put cell in row, and add it to table
+                    row.appendChild( instructionsCell );
+                    table.appendChild( row );
+
+                    // go next instruction
+                    stepIndex++;
                 }
-                // append text
-                instructionsCell.innerHTML += chunks[ stepIndex ][ 0 ].text.text;
-
-                // put cell in row, and add it to table
-                row.appendChild( instructionsCell );
-                table.appendChild( row );
-
-                // go next instruction
-                stepIndex++;
             }
         }
         return wrapper;
