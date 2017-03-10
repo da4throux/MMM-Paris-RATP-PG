@@ -114,8 +114,6 @@ Module.register( "MMM-Toulouse-Transports", {
 
         var uList = document.createElement( "ul" );
         uList.classList.add("fa-ul");
-        uList.className = "small";
-
 
         for ( var journeyIndex = 0; journeyIndex < this.config.maximumEntries; journeyIndex++ ) {
 
