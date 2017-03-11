@@ -1,0 +1,27 @@
+{
+  "name": "MMM-Toulouse-Transports",
+  "version": "1.0.0",
+  "description": "Toulouse Local transport based on https://github.com/da4throux/MMM-Paris-RATP-PG module for MagicMirror",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Telomere31/MMM-Toulouse-Transports"
+  },
+  "keywords": [
+    "magic mirror",
+    "smart mirror",
+    "localtransport",
+    "module",
+    "Toulouse"
+  ],
+  "author": "Telomere31",
+  "contributors": "https://github.com/Telomere31/MMM-Toulouse-Transports/graphs/contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Telomere31/MMM-Toulouse-Transports/issues"
+  },
+  "homepage": "https://github.com/Telomere31/MMM-Toulouse-Transports#readme",
+  "dependencies": {
+    "unirest": "latest",
+    "node-forge": "latest"
+    }
+}
