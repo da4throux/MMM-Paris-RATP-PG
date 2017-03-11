@@ -1,8 +1,18 @@
 # MMM-Toulouse-Transports
-Attempt to make a Magic Mirror Module for Toulouse transportation system
+Attempt to make a Magic Mirror Module for Toulouse transportation system.
+I'm new to Git, MMM, Javascript/Node, so this also a Sandbox for me.
+
+The module depends exclusively on the TISSEO web API.
+You'll need to ask them for an API key to use this module. Mail link coming soon.
+
+The journey directions are provided by their API, almost exclusively in french.
+
+I'm thinking about makin the displays more minimalistic, but for now, I need to focus on Javascript/DOM syntax and mechanics.
 
 ## WARNING: License and intellectual property statement
-Mainly inspired by https://github.com/da4throux/MMM-Paris-RATP-PG
+
+Heavily inspired from https://github.com/da4throux/MMM-Paris-RATP-PG
+
 No license defined yet, this should probably inherit da4throux's project license.
 working on it for now.
 
@@ -20,23 +30,22 @@ Expected configuration is as follows:
 ```
 config: {
     apikey: 'YOUR TOULOUSE TRANSPORTS API KEY',
-    departurePlace: '', // free text address
-    arrivalPlace: '', // free text adddress
-    firstDepartureDatetime: '', // YYYY-MMDD HH:MM
-    lastDepartureDatetime: '', // YYYY-MMDD HH:MM
-    maxTransferNumber: '5',
-    roadMode: 'walk', //  walk / wheelchair / bike / car
+    departurePlace: '',                  // free text address
+    arrivalPlace: '',                    // free text adddress
+    firstDepartureDatetime: '',          // YYYY-MMDD HH:MM not yet implemented
+    lastDepartureDatetime: '',           // YYYY-MMDD HH:MM not yet implemented
+    maxTransferNumber: '5',              // limit number of changes. 5 by default
+    roadMode: 'walk',                    // walk / wheelchair / bike / car. See TISSEO API. Not yet implemented.
 
-    // inherited from
+    // the following is inherited from
     // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
-    
-    maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
-    updateInterval: 60000, //time in ms between pulling request for new times (update request)
-    converToWaitingTime: true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
-    showSecondsToNextUpdate: true, // display a countdown to the next update pull (should I wait for a refresh before going ?)
-    showLastUpdateTime: false, //display the time when the last pulled occured (taste & color...)
-    oldUpdateOpacity: 0.5, //when a displayed time age has reached a threshold their display turns darker (i.e. less reliable)
-    oldThreshold: 0.1, //if (1+x) of the updateInterval has passed since the last refresh... then the oldUpdateOpacity is applied
-    debug: false, //console.log more things to help debugging
+    maximumEntries: 2,              //if the APIs sends several results for the incoming transport how many should be displayed
+    updateInterval: 60000,          //time in ms between pulling request for new times (update request)
+    converToWaitingTime: true,      // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
+    showSecondsToNextUpdate: true,  // display a countdown to the next update pull (should I wait for a refresh before going ?)
+    showLastUpdateTime: false,      //display the time when the last pulled occured (taste & color...)
+    oldUpdateOpacity: 0.5,          //when a displayed time age has reached a threshold their display turns darker (i.e. less reliable)
+    oldThreshold: 0.1,              //if (1+x) of the updateInterval has passed since the last refresh... then the oldUpdateOpacity is applied
+    debug: false,                   //console.log more things to help debugging
 }
 ```
