@@ -167,6 +167,8 @@ Module.register( "MMM-Toulouse-Transports", {
 
                     listElement.innerHTML += chunks[ stepIndex ].service.text.text;
                 }
+                //listElement.style.fontSize = '60%';
+                listElement.style.fontSize = 'small';
                 uList.appendChild( listElement );
 
                 // go next instruction
