@@ -65,7 +65,7 @@ Module.register( "MMM-Toulouse-Transports", {
 
         this.roadMode = '';
 
-        this.lastUpdate = 'never updated';
+        this.lastUpdate = new Date();
         this.loaded = true;
 
         this.loaded = false;
