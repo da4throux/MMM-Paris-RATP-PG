@@ -1,7 +1,7 @@
 # MMM-Paris-RATP-PG
 
 ###MagicMirror MichMich module to display next buses and RERs for a configured list of stations/ destinations
-###forked from MMM-HH-LocalTransport see more detailed information on gerog90 [blog](https://lane6.de).
+###forked from da4throux/MMM-Paris-RATP-PG see more detailed information on gerog90 [blog](https://lane6.de).
 
 # Presentation
 A module to display the different buses and rers related to a list of station/destination, in order to avoid waiting to much for them when leaving home.
