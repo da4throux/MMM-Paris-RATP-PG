@@ -58,7 +58,7 @@ module.exports = NodeHelper.create( {
         this.sendSocketNotification( "UPDATE", { lastUpdate: new Date( ) } );
 
         // Toulouse transportation system API
-        var url = this.config.apiBase + '&departurePlace=' + this.config.departurePlace + '&arrivalPlace=' + this.config.arrivalPlace + '&displayResultTable' + '&displayWording=1' + '&key=' + this.config.apiKey;
+        var url = this.config.apiBase + '&maxTransferNumber='+ this.config.maxTransferNumber+'&departurePlace=' + this.config.departurePlace + '&arrivalPlace=' + this.config.arrivalPlace + '&displayResultTable' + '&displayWording=1' + '&key=' + this.config.apiKey;
         /*var url = this.config.apiBase + '&departurePlace='+this.config.departurePlace + '&departurePlaceXY='+this.config.departurePlaceXY + '&arrivalPlace=' +this.config.arrivalPlace +'&arrivalPlaceXY='+this.config.arrivalPlaceXY + '²&displayResultTable' + '&displayWording=1' +'&key='+this.config.apiKey;*/
 
         var self = this;
