@@ -1,6 +1,5 @@
 *.zip
-public/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.css
-public/font-awesome-4.7.0/font-awesome-4.7.0/css/font-awesome.min.css
 sublime.sublime-workspace
 exemple2_json.json
 exemple_json.json
+node_modules
