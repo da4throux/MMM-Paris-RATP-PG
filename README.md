@@ -23,7 +23,17 @@ However, due to the API being slightly different, many adaptation were made.
 
 # Install
 
+0. Make sure you have MagicMirror installed.
 1. Clone repository into `../modules/` inside your MagicMirror folder.
+	go to
+	```
+		../modules/
+	```
+	type
+	```
+		git clone https://github.com/Telomere31/MMM-Toulouse-Transports
+	```
+
 2. Run `npm install` inside `../modules/MMM-Toulouse-Transports/` folder
 3. Add the module to the MagicMirror config
 ```
