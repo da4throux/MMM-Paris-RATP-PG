@@ -16,8 +16,6 @@ Heavily inspired from https://github.com/da4throux/MMM-Paris-RATP-PG
 No license defined yet, this should probably inherit da4throux's project license.
 working on it for now.
 
-In the future, i might close this and make it a branch of da4trhoux's main project.
-
 However, due to the API being slightly different, many adaptation were made.
 
 # Screenshot
