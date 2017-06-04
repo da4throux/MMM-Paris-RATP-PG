@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/Telomere31/MMM-Toulouse-Transports#readme",
   "dependencies": {
-    "unirest": "latest",
-    "node-forge": "latest"
-    }
+    "moment": "^2.18.1",
+    "node-forge": "latest",
+    "synchronize": "^2.0.0",
+    "unirest": "latest"
+  }
 }
