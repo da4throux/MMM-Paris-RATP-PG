@@ -5,8 +5,6 @@ I'm new to Git, MMM, Javascript/Node, so this also a Sandbox for me.
 The module depends exclusively on the TISSEO web API.
 You'll need to ask them for an API key to use this module. Mail link coming soon.
 
-### This branch is intended for display of bus stops schedules only
-
 I'm thinking about makin the displays more minimalistic, but for now, I need to focus on Javascript/DOM syntax and mechanics.
 
 ## WARNING: License and intellectual property statement
@@ -23,7 +21,17 @@ However, due to the API being slightly different, many adaptation were made.
 
 # Install
 
+0. Make sure you have MagicMirror installed.
 1. Clone repository into `../modules/` inside your MagicMirror folder.
+	go to
+	```
+		../modules/
+	```
+	type
+	```
+		git clone https://github.com/Telomere31/MMM-Toulouse-Transports
+	```
+
 2. Run `npm install` inside `../modules/MMM-Toulouse-Transports/` folder
 3. Add the module to the MagicMirror config
 ```
