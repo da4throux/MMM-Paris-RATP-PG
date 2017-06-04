@@ -28,18 +28,6 @@ const ERROR   = "ERROR";
 const DEBUG   = "DEBUG";
 const TRACE   = "TRACE";
 
-// extend array with a contain() function
-/*
-Array.prototype.contains = function(obj) {
-    var i = this.length;
-    while (i--) {
-        if (this[i] === obj) {
-            return true;
-        }
-    }
-    return false;
-};
-*/
 module.exports = NodeHelper.create( {
 
     contains : function (array, obj) {
@@ -97,13 +85,10 @@ module.exports = NodeHelper.create( {
      */
     socketNotificationReceived: function ( notification, payload ) {
         this.log(TRACE, "socketNotificationReceived - received: " + notification);
-
         if ( notification === 'SET_CONFIG' && this.started == false ) {
             this.config = payload;
             this.log(DEBUG, ' *** config set in node_helper: ' );
             this.log(DEBUG, JSON.stringify(payload));
-
-
             for(var i=0; i < this.config.stopSchedules.length; i++){
                 var line = this.config.stopSchedules[i].lineNumber;
                 var stop = this.config.stopSchedules[i].stopCode;
@@ -114,22 +99,14 @@ module.exports = NodeHelper.create( {
                     this.uniqueStops.push(stop);
                 };
             };
-
-            //this.started = true;
-            //self.scheduleUpdate( this.config.initialLoadDelay );
         };
-
         if (notification === 'UPDATE_GLOBAL_TISSEO_DATA' && this.started == false ) {
             this.log(TRACE, ' *** call Update Lines list');
             this.updateAllTisseoData();
             this.started = true;
-
-            //this.scheduleTisseoDataCheck(this.config.initialLoadDelay);
-
             this.log(TRACE, "socketNotificationReceived - schedule update of bus data (call scheduleBusScheduleUpdate())");
             this.scheduleBusScheduleUpdate(this.config.initialLoadDelay);
         };
-
         if (notification === 'UPDATE_BUS_SCHEDULES' && this.started == true) {
             this.log(TRACE, ' *** call Update Bus Schedules' );
             this.scheduleBusScheduleUpdate(this.config.initialLoadDelay);
@@ -141,9 +118,6 @@ module.exports = NodeHelper.create( {
         var self = this;
         var nextIndex = index + 1;
         var apiKey = self.config.apiKey;
-
-
-
         if ( index <= self.config.stopSchedules.length - 1) {
             var lineShortName = self.config.stopSchedules[index].lineNumber;
             self.log(DEBUG, "updateLineInfo - iteration:" + index +" get Line data for: " + lineShortName);
@@ -182,8 +156,6 @@ module.exports = NodeHelper.create( {
         this.log(TRACE, "updateStopInfo - start - stopCode="+stopCode+" - lineId="+lineId);
         var self = this;
         var apiKey = self.config.apiKey;
-
-
         var urlAllStop = 'https://api.tisseo.fr/v1/stop_points.json?lineId=' + lineId +'&key=' + apiKey;
         unirest.get( urlAllStop )
             .headers( {'Accept': 'text/html,application/xhtml+xml,application/xml;charset=utf-8'} )
@@ -221,23 +193,17 @@ module.exports = NodeHelper.create( {
      */
     updateAllTisseoData : function( ) {
         this.log(TRACE, "updateAllTisseoData - start");
-
         var self = this;
-
         // reset local tables
         this.neededTisseoStops = [];
         this.neededTisseoLines = [];
-
         // get all necessary lines Data
         self.log(DEBUG, "updateAllTisseoData - itreations to do: "+ self.config.stopSchedules.length);
-
         // start lineId and stopID search chain
         self.updateLineInfo(0);
-
         this.log(TRACE, "updateAllTisseoData - end");
     },
-
-
+    
     /* scheduleUpdate()
      * Schedule next update.
      * argument delay number - Millis econds before next update. If empty, this.config.updateInterval is used.
@@ -253,7 +219,6 @@ module.exports = NodeHelper.create( {
         this.updateTimer = setTimeout( function ( ) {
             self.updateJourneysTimetable( );
         }, nextLoad );
-
         this.log(TRACE, "scheduleJourneysUpdate - end");
     },
 
@@ -270,47 +235,15 @@ module.exports = NodeHelper.create( {
         }, nextLoad );
         this.log(TRACE, "scheduleBusScheduleUpdate - end");
     },
-/*
-    scheduleTisseoDataCheck: function ( delay ) {
-        this.log(TRACE, "scheduleTisseoDataCheck - start");
-        this.log(TRACE, "scheduleTisseoDataCheck - unique lines size: "+ this.uniqueLines.length);
-        this.log(TRACE, "scheduleTisseoDataCheck - unique stops size: "+ this.uniqueStops.length);
-        this.log(TRACE, "scheduleTisseoDataCheck - grabbed lines size: "+ this.neededTisseoLines.length);
-        this.log(TRACE, "scheduleTisseoDataCheck - grabbed stops size: "+ this.neededTisseoStops.length);
-
-        var nextLoad = this.config.updateInterval;
-        if ( typeof delay !== "undefined" && delay >= 0 ) {
-            nextLoad = delay;
-        }
-        var self = this;
-        clearTimeout( this.updateTisseoDataTimer );
-
-        if (this.uniqueStops.length == this.neededTisseoStops.length && this.uniqueLines.length == this.neededTisseoLines.length) {
-            // no update needed. we have all we need.
-            this.log(TRACE, "scheduleTisseoDataCheck - no next update needed");
-        } else {
-            this.log(TRACE, "scheduleTisseoDataCheck - program next update");
-            this.updateTisseoDataTimer = setTimeout( function ( ) {
-                self.updateAllTisseoData();
-            }, nextLoad );
-        }
-
-        this.log(TRACE, "scheduleTisseoDataCheck - end");
-    },*/
-
-
+    
     updateJourneysTimetable: function () {
         this.log(TRACE, "updateJourneysTimetable - start");
         this.sendSocketNotification( "UPDATE_JOURNEYS", { lastUpdate: new Date( ) } );
-
         // Toulouse transportation system API
         var url = this.config.apiBase + '&maxTransferNumber='+ this.config.maxTransferNumber+'&departurePlace=' + this.config.departurePlace + '&arrivalPlace=' + this.config.arrivalPlace + '&displayResultTable' + '&displayWording=1' + '&key=' + this.config.apiKey;
-
         var self = this;
         var retry = true;
-
         this.log(TRACE, ' *** fetching: ' + url );
-
         unirest.get( url )
             .headers( {
                 'Accept': 'text/html,application/xhtml+xml,application/xml;charset=utf-8'
@@ -333,19 +266,16 @@ module.exports = NodeHelper.create( {
         //}
         this.log(TRACE, "updateJourneysTimetable - end");
     },
-
-
+    
     /*
      *
      */
     updateBusScheduleTimetable: function (index) {
         this.log(TRACE, "updateBusScheduleTimetable - start - parameter: index="+index);
         this.sendSocketNotification( "UPDATE_BUS_SCHEDULES", { lastUpdate: new Date( ) } );
-
         var apiKey=this.config.apiKey;
         var self = this;
         var retry = true;
-
         var tableItem = {};
         // {
         //    lineId        : XXXXXXXXXXXXXX,
@@ -355,12 +285,10 @@ module.exports = NodeHelper.create( {
         //    scheduleData: []
         // }
         var scheduleData = [];
-
         //this.log(TRACE, "updateBusScheduleTimetable - unique lines size: "+ this.uniqueLines.length);
         //this.log(TRACE, "updateBusScheduleTimetable - unique stops size: "+ this.uniqueStops.length);
         //this.log(TRACE, "updateBusScheduleTimetable - grabbed lines size: "+ this.neededTisseoLines.length);
         //this.log(TRACE, "updateBusScheduleTimetable - grabbed stops size: "+ this.neededTisseoStops.length);
-
         if ( this.uniqueStops.length == this.neededTisseoStops.length &&
              this.uniqueLines.length == this.neededTisseoLines.length ) {
             // we have all stops and lines needed to work
@@ -368,15 +296,11 @@ module.exports = NodeHelper.create( {
             if(index < this.config.stopSchedules.length) {
                 // we progres in the table of required data
                 self.log(DEBUG, "updateBusScheduleTimetable - iteration N°: " + index);
-
                 currentStopConfig = this.config.stopSchedules[index];
-
                 // 1- grab the lineId from given lineNumber
                 var resultLine = this.findBusLineId(currentStopConfig.lineNumber);
-
                 // 2- grab the stopId from given stopOperatorCode
                 var resultStop = this.findStopId(currentStopConfig.stopCode);
-
                 if ( !resultLine.error && !resultStop.error ) {
                     this.log(TRACE, "updateBusScheduleTimetable - lineId Found and stopId found");
                     // prepare table element to add
@@ -384,7 +308,6 @@ module.exports = NodeHelper.create( {
                     tableItem.lineShortName = currentStopConfig.lineNumber;
                     tableItem.stopId = resultStop;
                     tableItem.stopOpCode = currentStopConfig.stopCode;
-
                     // 2- get associated schedule data
                     var url = this.config.apiBaseSchedules
                     + '&operatorCode='+ tableItem.stopOpCode
@@ -392,9 +315,7 @@ module.exports = NodeHelper.create( {
                     + '&displayRealTime=1'
                     + '&number=' + currentStopConfig.maxEntries
                     + '&key=' + apiKey;
-
                     this.log(TRACE, ' *** fetching: ' + url );
-
                     // get the data
                     unirest.get( url )
                         .headers({'Accept': 'text/html,application/xhtml+xml,application/xml;charset=utf-8'})
@@ -438,29 +359,21 @@ module.exports = NodeHelper.create( {
             // reschedule
             self.scheduleBusScheduleUpdate( ( self.loaded ) ? -1 : this.config.retryDelay );
         };
-
         this.log(TRACE, "updateBusScheduleTimetable - end");
     },
-
-
-
+    
     findBusLineId: function ( lineNumber) {
         this.log(TRACE, "findBusLineId - start");
         var returnData = {error: true, msg: 'not found'};
-
         this.log(TRACE, "findBusLineId - trying to find LineId for lineNumber: " + lineNumber);
-
         if (this.neededTisseoLines.length > 0) {
             // parse the tisseo lines data
             this.log(DEBUG, "findBusLineId - Number of known tisseo lines = " + this.neededTisseoLines.length);
             for( var i  = 0; i < this.neededTisseoLines.length; i++) {
                 currentLine = this.neededTisseoLines[i];
                 //this.log(DEBUG, "findBusLineId - currentLine = " + JSON.stringify(currentLine));
-
                 if (currentLine.lineNumber == lineNumber.toString()) {
-
                     this.log(TRACE, "Processing - findBusLineId - lineId found:" + currentLine.lineId);
-
                     returnData = currentLine.lineId;
                     break;
                 };
@@ -468,31 +381,24 @@ module.exports = NodeHelper.create( {
         } else {
             returnData = {error: true, msg: "Could not find lineId for lineNumber: "+lineNumber+". neededTisseoLines not available !"};
         };
-
         this.log(TRACE, "findBusLineId - end");
-
         return returnData;
     },
-
 
     findStopId: function ( stopOperatorCode) {
         this.log(TRACE, "findStopId - start");
         var returnData = {error: true, msg: 'not found'};
-
         this.log(TRACE, "findStopId - trying to find stopId for stopOperatorCode : " + stopOperatorCode);
-
         if (this.neededTisseoStops.length > 0) {
             // parse the tisseo lines data
             this.log(DEBUG, "findStopId - length of stops found = " + this.neededTisseoStops.length);
             for( var i  = 0; i < this.neededTisseoStops.length ; i++) {
                 currentStopInfo = this.neededTisseoStops[i];
-
                 // sturcture is
                 // {
                 //    stopCode: stopCode,
                 //    stopId: stopId
                 // }
-
                 if (currentStopInfo.stopCode == stopOperatorCode.toString()){
                     this.log(TRACE, "findStopId - stopId found:" + currentStopInfo.stopId);
                     returnData = currentStopInfo.stopId;
@@ -502,26 +408,8 @@ module.exports = NodeHelper.create( {
         } else {
             returnData = {error: true, msg: "Could not find stopId for stopOperatorCode: " + stopOperatorCode + ". neededTisseoStops not available !"};
         };
-
         this.log(TRACE, "findStopId - end");
-
         return returnData;
-    },
-
-
-    /* send journeys data to module DOM management*/
-    processJourneys: function ( data ) {
-        this.log(TRACE, "processJourneys - start");
-        this.log(DEBUG, "processJourneys -  Processing - the received journeys: " + JSON.stringify(data.routePlannerResult.journeys));
-        //this.journeyData = {};
-        //this.journeyData.allJourneys = data.routePlannerResult.journeys;
-        //this.journeyData.maxDepartureHour = data.routePlannerResult.query.timeBounds.maxDepartureHour;
-        //this.journeyData.minArrivalHour = data.routePlannerResult.query.timeBounds.minArrivalHour;
-        //this.journeyData.roadMode = data.routePlannerResult.query.roadMode;
-        //this.journeyData.lastUpdate = new Date( );
-        //this.journeyData.loaded = true;
-        this.sendSocketNotification( "JOURNEYS", this.journeyData );
-        this.log(TRACE, "processJourneys - end");
     },
 
     /* send bus schedule data to module DOM management*/
@@ -538,15 +426,5 @@ module.exports = NodeHelper.create( {
         this.busScheduleData.loaded = false;
         this.busScheduleData.data = [];
         this.log(TRACE, "processBusScheduleData - end");
-    },
-
-
-    processAllLinesData: function () {
-        // now that we have all the lines, do something
-        this.log(TRACE, "processAllLinesData - start");
-        this.sendSocketNotification("ALL_TISSEO_DATA_AVAILABLE", null);
-
-        this.log(TRACE, "processAllLinesData - end");
     }
-
 } );
