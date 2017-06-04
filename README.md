@@ -19,8 +19,7 @@ working on it for now.
 However, due to the API being slightly different, many adaptation were made.
 
 # Screenshot
-(Taken at 01:00 (01:00 am), that explains the very long duration :))
-![screenshot](https://github.com/Telomere31/MMM-Toulouse-Transports/blob/branch-busSchedulesOnly/bus_schedules.png)
+![screenshot](https://github.com/Telomere31/MMM-Toulouse-Transports/blob/master/bus_schedules.png)
 
 ## Configuration
 Expected configuration is as follows:
