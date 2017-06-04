@@ -3,22 +3,9 @@
         {
             module: 'MMM-Toulouse-Transports',
             position: 'top_right',
-
-            // pour trajets:
-            //header: 'mes trajets à toulouse',
-
-            // pour horaires
             header: 'Horaires de passage',
             config: {
-                apiKey: '555f2a57-4b76-40cd-bb26-40965bc75d73',
-
-                // pour trajets:
-                //departurePlace: 'Arènes Toulouse', // free text address
-                //arrivalPlace: 'Université Paul Sabatier Toulouse', // free text adddress
-
-
-
-                // pour horaires
+                apiKey: 'APIKEY',
                 stopSchedules: [
                     {
                         lineNumber: 22, // shall be >0
@@ -31,14 +18,8 @@
                         maxEntries:2    // shall be >1
                     }
                 ],
-
                 debug: true,
-                maximumEntries: 1,
-                updateInterval: 120000,
-                giveDetailedInstructions: false
-
-                // pour trajets:
-                //maxTransferNumber: 3,
+                updateInterval: 120000
             }
         }
 */
@@ -47,24 +28,12 @@
 
 Module.register( "MMM-Toulouse-Transports", {
     defaults: {
-        //apiKey: '', // should be removed
-        // pour trajets:
-        // maxTransferNumber: '5',
-        giveDetailedInstructions: false,
-        // inherited from
-        // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
-
-        // pour trajets:
-        //maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
         maxTimeOffset: 200, // Max time in the future for entries
         useRealtime: true,
         updateInterval: 1 * 60 * 1000, //time in ms between pulling request for new times (update request)
         animationSpeed: 2000,
         convertToWaitingTime: true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
         initialLoadDelay: 0, // start delay seconds.
-        // pour trajets:
-        // apiBase: 'https://api.tisseo.fr/v1/journeys.json?',
-        // pour horaires:
         apiBaseSchedules: 'https://api.tisseo.fr/v1/stops_schedules.json?',
         maxLettersForDestination: 22, //will limit the length of the destination string
         concatenateArrivals: true, //if for a transport there is the same destination and several times, they will be displayed on one line
@@ -73,9 +42,8 @@ Module.register( "MMM-Toulouse-Transports", {
         oldUpdateOpacity: 0.5, //when a displayed time age has reached a threshold their display turns darker (i.e. less reliable)
         oldThreshold: 0.1, //if (1+x) of the updateInterval has passed since the last refresh... then the oldUpdateOpacity is applied
         retryDelay: 10 * 1000, // delay before data update retrys (ms)
-
         debug: false
-    }, //console.log more things to help debugging
+    },
 
     /* Start Sequence*/
     start: function ( ) {
@@ -89,14 +57,7 @@ Module.register( "MMM-Toulouse-Transports", {
         // only one call should be necessary for now
         Log.info("start - Send notification UPDATE_GLOBAL_TISSEO_DATA");
         this.sendSocketNotification( 'UPDATE_GLOBAL_TISSEO_DATA', null);
-
-        // for journeys
-        //this.allJourneys = [];
-        //this.maxDepartureHour = '';
-        //this.minArrivalHour = '';
-        //this.roadMode = '';
-
-        // for bus schedules
+        
         this.busScheduleData = [];
 
         this.lastUpdate = new Date();
@@ -137,90 +98,8 @@ Module.register( "MMM-Toulouse-Transports", {
         //Log.info("End getStyles (before return statement)");
         return ['font-awesome.css'];
     },
-
-
-// following dom generation is intended for journeys display
-// far from being sexy or optimum, but ... don't have time for fancy tuning now
-// todo one day : allow to config module in journey mode and bus schedules mode
-/*
-    // inherited and adapted from
-    // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
-    // Override dom generator.
-    getDom: function ( ) {
-        var now = new Date( );
-        var wrapper = document.createElement( "div" );
-        wrapper.classList.add("small");
-
-
-        if ( !this.loaded ) {
-            wrapper.innerHTML = "Loading journeys ...";
-            wrapper.className = "dimmed light small";
-            return wrapper;
-        }
-
-        var uList = document.createElement( "ul" );
-        uList.classList.add("fa-ul");
-        uList.classList.add("small");
-
-        for ( var journeyIndex = 0; journeyIndex < this.config.maximumEntries; journeyIndex++ ) {
-
-            //if (this.config.debug) { Log.debug("JOURNEYS - " + JSON.stringify(this.allJourneys));}
-            var departureDateTime = this.allJourneys[ journeyIndex ].journey.departureDateTime;
-            var arrivalDateTime = this.allJourneys[ journeyIndex ].journey.arrivalDateTime;
-            var duration = this.allJourneys[ journeyIndex ].journey.duration;
-
-            var chunks = this.allJourneys[ journeyIndex ].journey.chunks;
-            if (this.config.debug) {
-                Log.debug("JOURNEYS - There are " + chunks.length + " chunk(s)");
-            }
-
-            var stepIndex = 0;
-
-            while ( stepIndex < chunks.length ) {
-                var listElement = document.createElement( "li" );
-                //listElement.classList.add("fa");
-                listElement.classList.add("small");
-                //listElement.style.textAlign = 'left';
-
-                var icon = document.createElement("i");
-                icon.classList.add("fa-fw");
-                // <i class="fa fa-subway" aria-hidden="true"></i>
-                // <i class="fa fa-train" aria-hidden="true"></i>
-                //'<i class="fa fa-street-view" aria-hidden="true"></i>';
-                if(this.config.giveDetailedInstructions && chunks[ stepIndex ]["street"] != null){
-                    icon.classList.add("fa-li", "fa", "fa-blind");
-                    listElement.appendChild(icon);
-
-                    listElement.innerHTML += chunks[ stepIndex ].street.text.text;
-                }
-                else if (chunks[ stepIndex ]["stop"] != null) {
-                    icon.classList.add("fa-li", "fa", "fa-exchange");
-                    icon.classList.add("dimmed");
-                    listElement.appendChild(icon);
-
-                    listElement.innerHTML += chunks[ stepIndex ].stop.text.text;
-                }
-                else if (chunks[ stepIndex ]["service"] != null) {
-                    icon.classList.add("fa-li", "fa", "fa-bus");
-                    listElement.appendChild(icon);
-                    icon.classList.add("bright");
-
-                    listElement.innerHTML += chunks[ stepIndex ].service.text.text;
-                }
-                //listElement.style.fontSize = '60%';
-                listElement.style.fontSize = 'small';
-                uList.appendChild( listElement );
-
-                // go next instruction
-                stepIndex++;
-            }
-        }
-        wrapper.appendChild( uList );
-        return wrapper;
-    },
-*/
-
-// the following is intended for display of bus stop schedules
+    
+    
     getDom: function ( ) {
         Log.info("getDom - Start");
         var now = new Date(); // moment(); // moment package cannot be invoked in here ... only in nodehelper ?! not very handy
@@ -388,32 +267,21 @@ Module.register( "MMM-Toulouse-Transports", {
         Log.info("computeWaitingTime - end - waitingTime="+waitingTime);
         return waitingTime;
     },
-
-    // inherited and adapted from
-    // da4throux  (https://github.com/da4throux/MMM-Paris-RATP-PG)
+    
     socketNotificationReceived: function ( notification, payload ) {
         Log.info("socketNotificationReceived - Module received notification: " + notification);
         switch ( notification ) {
             case "JOURNEYS":
-                //this.allJourneys = payload.allJourneys;
-                //this.roadMode = payload.roadMode;
-                //this.maxDepartureHour = payload.maxDepartureHour;
-                //this.minArrivalHour = payload.minArrivalHour;
-                //this.LastUpdate = payload.lastUpdate;
-                //this.loaded = payload.loaded;
-                //this.updateDom( );
                 break;
             case "BUS_SCHEDULES":
                 this.busScheduleData = payload.data;
                 this.lastUpdate = payload.lastUpdate;
                 this.loaded = payload.loaded;
-                Log.info("socketNotificationReceived - bus schedule data received is: " + this.busScheduleData);
+                //Log.info("socketNotificationReceived - bus schedule data received is: " + this.busScheduleData);
                 //Log.info("socketNotificationReceived - bus schedule data received is: " + JSON.stringify(this.busScheduleData));
                 this.updateDom( );
                 break;
             case "UPDATE_JOURNEYS":
-                //this.config.lastUpdate = payload.lastUpdate;
-                //this.updateDom( );
                 break;
             case "UPDATE_BUS_SCHEDULES":
                 this.config.lastUpdate = payload.lastUpdate;
