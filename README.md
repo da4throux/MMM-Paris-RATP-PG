@@ -47,7 +47,7 @@ Expected configuration is as follows:
                     {
                         lineNumber: 1, // bus line number (the one displayed on bus stops, maps and buses ..)
                         stopCode  : 1, // this is an exact stop code of Tisseo. You can find it on your favorite bus stop sign. or Get it on Tisseo travels webapp
-                        maxEntries:3   // if you want the 2 next buses schedules
+                        maxEntries: 3  // if you want the 3 next buses schedules
                     },
                     {
                         //etc.
