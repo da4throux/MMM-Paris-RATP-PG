@@ -21,32 +21,42 @@ However, due to the API being slightly different, many adaptation were made.
 # Screenshot
 ![screenshot](https://github.com/Telomere31/MMM-Toulouse-Transports/blob/master/bus_schedules.png)
 
+# Install
+
+1. Clone repository into `../modules/` inside your MagicMirror folder.
+2. Run `npm install` inside `../modules/MMM-Toulouse-Transports/` folder
+3. Add the module to the MagicMirror config
+```
+	{
+	        module: 'MMM-Toulouse-Transports',
+	        position: 'top_right',
+	        header: 'Horaires de passage', // choose your own text
+	        config: {
+                        // see below
+	        }
+    	},
+```
+
 ## Configuration
 Expected configuration is as follows:
 
 ```
-{
-            module: 'MMM-Toulouse-Transports',
-            position: 'top_right',
-            
-            header: 'Horaires de passage',
-            config: {
-                apiKey: 'YOUR API KEY HERE',
-                // pour horaires
-                stopSchedules: [
+            config: { // configuration specific to this module
+                apiKey         : 'YOUR API KEY HERE',
+                stopSchedules  : [
                     {
-                        lineNumber: 22,
-                        stopCode: 6601, // this is an exact stop code of Tisseo. You can find it on your favorite bus stop sign. or Get it on Tisseo travels webapp
-                        maxEntries:3 // if you want the 2 next buses schedules
+                        lineNumber: 1, // bus line number (the one displayed on bus stops, maps and buses ..)
+                        stopCode  : 1, // this is an exact stop code of Tisseo. You can find it on your favorite bus stop sign. or Get it on Tisseo travels webapp
+                        maxEntries:3   // if you want the 2 next buses schedules
                     },
                     {
-                        etc.
+                        //etc.
                     },
                     {
-                        etc.
+                        //etc.
                     }
                 ],
-                debug: true, // if you have issues and want to help me fix them.
-                updateInterval: 120000
+                debug          : false, // if you have issues and want to help me fix them, yo should put this to true
+                updateInterval : 120000
             }
 ```
