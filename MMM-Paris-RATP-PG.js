@@ -32,6 +32,9 @@ Module.register("MMM-Paris-RATP-PG",{
     velibGraphWidth: 400, //Height will follow
     apiAutolib: 'https://opendata.paris.fr/explore/dataset/stations_et_espaces_autolib_de_la_metropole_parisienne/api/', ///add '?q=' mais pas d'info temps réel... pour l'instant
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
+    pluie: true,
+    pluieAPI: 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
+    pluieUpdateInterval: 1 * 10 * 60 * 1000, //every 10 minutes
   },
   
   // Define required scripts.
@@ -50,6 +53,7 @@ Module.register("MMM-Paris-RATP-PG",{
     this.busLastUpdate = {};
     this.loaded = false;
     this.updateTimer = null;
+    this.pluieStatus = {};
     var self = this;
     setInterval(function () {
       self.caller = 'updateInterval';
@@ -276,6 +280,21 @@ Module.register("MMM-Paris-RATP-PG",{
           break;
       }
     }
+    if (this.config.pluie) {
+      for (var index = 0; index < this.config.pluiePlaces.length; index++) {
+        row = document.createElement("tr");
+        firstCell = document.createElement("td");
+        firstCell.className = "align-right bright";
+        firstCell.innerHTML = this.config.pluiePlaces[index].name;
+        row.appendChild(firstCell);
+        secondCell = document.createElement("td");
+        secondCell.className = "align-left";
+        secondCell.innerHTML = this.pluieStatus[this.config.pluiePlaces[index].id] ? this.pluieStatus[this.config.pluiePlaces[index].id].niveauPluieText.join('</br>') : 'N/A';
+        secondCell.colSpan = 2;
+        row.appendChild(secondCell);
+        table.appendChild(row);
+      }
+    }
     return wrapper;
   },
   
@@ -339,6 +358,29 @@ Module.register("MMM-Paris-RATP-PG",{
         break;
       case "UPDATE":
         this.config.lastUpdate = payload.lastUpdate;
+        this.updateDom();
+        break;
+      case "PLUIE":
+        if (this.config.debug) {
+          console.log(' *** received pluie information for: ' + payload.id);
+          console.log(payload);
+        }
+        pluieTypes = JSON.parse(localStorage['pluieTypes'] || '[]');
+        pluieTypesChanged = false;
+        for (var index = 0; index < payload.niveauPluieText.length; index++) {
+          pluieType = payload.niveauPluieText[index].split(":").pop();
+          if (!pluieTypes.includes(pluieType)) {
+            pluieTypes.push(pluieType);
+            pluieTypesChanged = true;
+          }
+        }
+        if (pluieTypesChanged) {
+          console.log ('*** new pluieType: ') + JSON.stringify(pluieTypes);
+          localStorage['pluieTypes'] = JSON.stringify(pluieTypes);
+        }
+        localStorage['pluieTypes'] = JSON.stringify(pluieTypes);
+        this.pluieStatus[payload.id] = payload;
+        this.loaded = true;
         this.updateDom();
         break;
     }

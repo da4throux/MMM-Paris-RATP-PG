@@ -27,6 +27,7 @@ module.exports = NodeHelper.create({
       }
       this.started = true;
       self.scheduleUpdate(this.config.initialLoadDelay);
+      self.pluieScheduleUpdate(this.config.initialLoadDelay);
     }
   },
 
@@ -46,7 +47,20 @@ module.exports = NodeHelper.create({
       self.updateTimetable();
     }, nextLoad);
   },
-
+  
+  pluieScheduleUpdate: function(delay) {
+    var nextLoad = this.config.pluieUpdateInterval;
+    if (typeof delay !== "undefined" && delay >= 0) {
+      nextLoad = delay;
+    }
+    var self = this;
+    clearTimeout(this.pluieUpdateTimer);
+    if (this.config.debug) { console.log (' *** pluieScheduleUpdate set next update in ' + nextLoad);}
+    this.pluieUpdateTimer = setTimeout(function() {
+      self.updatePluie();
+    }, nextLoad);
+  },
+  
   getResponse: function(_url, _processFunction, _stopConfig) {
     var self = this;
     var retry = true;
@@ -59,7 +73,7 @@ module.exports = NodeHelper.create({
           if (response && response.body) {
             if (self.config.debug) {
               console.log (' *** received answer for: ' + _url);
-              console.log (_stopConfig);
+              if (_stopConfig) { console.log (_stopConfig); }
             }
             _processFunction(response.body, _stopConfig);
           } else {
@@ -73,7 +87,12 @@ module.exports = NodeHelper.create({
             }
           }
           if (retry) {
-            self.scheduleUpdate((self.loaded) ? -1 : this.config.retryDelay);
+            if (self.config.debug) { console.log (' *** getResponse: set retry for ' + _url); }
+            if (_url.indexOf(self.config.pluieAPI) !== -1) {
+              self.pluieScheduleUpdate((self.loaded) ? -1 : this.config.retryDelay);
+            } else {
+              self.scheduleUpdate((self.loaded) ? -1 : this.config.retryDelay);
+            }
           }
       })
   },
@@ -111,6 +130,13 @@ module.exports = NodeHelper.create({
       }
     }
   },
+  
+  updatePluie: function() {
+    var self = this;
+    var url;
+    url = self.config.pluieAPI + self.config.pluiePlaces[0].id;
+    self.getResponse(url, self.processPluie.bind(this));
+  },
 
   processVelib: function(data) {
     this.velib = {};
@@ -124,6 +150,18 @@ module.exports = NodeHelper.create({
     this.velib.lastUpdate = record.last_update;
     this.velib.loaded = true;
     this.sendSocketNotification("VELIB", this.velib);
+  },
+  
+  processPluie: function(data) {
+    this.pluie = {};
+    if (this.config.debug) {
+      console.log(' *** Pluie: ' + JSON.stringify(data));
+    }
+    this.pluie.id = data.idLieu;
+    this.pluie.lastUpdate = data.lastUpdate;
+    this.pluie.niveauPluieText = data.niveauPluieText;
+    this.pluie.loaded = true;
+    this.sendSocketNotification("PLUIE", this.pluie);
   },
 
   processBus: function(data, stopConfig) {
