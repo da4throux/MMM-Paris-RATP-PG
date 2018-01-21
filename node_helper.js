@@ -28,7 +28,7 @@ module.exports = NodeHelper.create({
       this.started = true;
       this.config.lines.forEach(function(l){
         setTimeout(function(){
-          if (this.config.debug) {
+          if (self.config.debug) {
             console.log (' *** line ' + l.label + ' intial update in ' + l.initialLoadDelay);
           }
           self.fetchHandleAPI(l);
@@ -80,10 +80,6 @@ module.exports = NodeHelper.create({
         if (response && response.body) {
           if (self.config.debug) {
             console.log (' *** received answer for: ' + _l.label);
-            console.log (' for line: ');
-            console.log (_l);
-            console.log (' response:');
-            console.log (response);
           }
           switch (_l.type) {
             case'pluie':
@@ -93,10 +89,10 @@ module.exports = NodeHelper.create({
             case 'bus':
             case 'rers':
             case 'metros':
-              self.processRATP(response, _l);
+              self.processRATP(response.body, _l);
               break;
             case 'traffic':
-              self.processTraffic(response, _l);
+              self.processTraffic(response.body, _l);
               break;
             default:
               if (this.config.debug) {
@@ -234,20 +230,13 @@ module.exports = NodeHelper.create({
     //this.sendSocketNotification("PLUIE", this.pluie);
   },
 
-  processBus: function(data, _l) {
-    var idMaker;
-    if (this.config.debug) { console.log (' *** processBus data'); console.log (data); }
-    this.schedule = {};
-    //*** is this if linked to v2 vs v3 or to the transportation mode ?
-    if (data.response) {
-      idMaker = data.response.informations;
-      this.schedule.id = idMaker.line.toString().toLowerCase() + '/' + (idMaker.station.id_station || idMaker.station.id) + '/' + (idMaker.destination.id_destination || idMaker.destination.id);
-    } else {
-      idMaker = data._metadata.call.split('/');
-      this.schedule.id = idMaker[idMaker.length - 3] + '/' + idMaker[idMaker.length - 2] + '/' + idMaker[idMaker.length - 1];
+  processRATP: function(data, _l) {
+    if (this.config.debug) {
+      console.log (' *** processRATP data received for ' + _l.label);
+      console.log (data.result);
+      console.log ('___');
     }
-    this.schedule.schedules = data.response ? data.response.schedules : data.result.schedules;
-    this.config.infos[_l.id].schedule = this.schedule.schedules;
+    this.config.infos[_l.id].schedules = data.result.schedules;
     this.config.infos[_l.id].lastUpdate = new Date();
     this.loaded = true;
     this.sendSocketNotification("DATA", this.config.infos);

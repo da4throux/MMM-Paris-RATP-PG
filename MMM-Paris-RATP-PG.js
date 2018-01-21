@@ -43,18 +43,18 @@ Module.register("MMM-Paris-RATP-PG",{
       convertToWaitingTime: true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
       updateTimer: null,
       initialLoadDelay: 0, // start delay seconds
+      showUpdateAge: true,
     },
     types:['bus', 'rers', 'traffic', 'tramways', 'metros', 'pluie'],
     lines: [
-      {type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', label: '38'},
-      {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B'},
-      {type: 'traffic', line: ['rers', 'B'], label: 'B'},
-      {type: 'traffic', line: ['tramways', 1], label: 'T1'}, //label to avoid confusion with metros line 1
-      {type: 'tramways', line: '3a', stations: 'georges+brassens', destination: 'R', label: '3a'},
-      {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6'},
+//      {type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', label: '38', updateInterval: 1 * 20 * 1000},
+      {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', updateInterval: 1 * 10 * 1000},
+//      {type: 'traffic', line: ['rers', 'B']},
+//      {type: 'traffic', line: ['tramways', 1], label: 'T1'}, //label to avoid confusion with metros line 1
+//      {type: 'tramways', line: '3a', stations: 'georges+brassens', destination: 'R', label: '3a'},
+//      {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6'},
       {type: 'pluie', id: '751140', name: 'Home', updateInterval: 1 * 5 * 60 * 1000, label: 'pluie'},
     ],
-    },
   },
 
   // Define required scripts.
@@ -66,10 +66,10 @@ Module.register("MMM-Paris-RATP-PG",{
   start: function() {
     var l;
     Log.info("Starting module: " + this.name);
-    this.config.infos = {};
-    for (i=0; i < lines.length; i++) {
+    this.config.infos = [];
+    for (i=0; i < this.config.lines.length; i++) {
       this.config.infos[i]={};
-      l = Object.assign(JSON.parse(JSON.stringify(line_template)),
+      l = Object.assign(JSON.parse(JSON.stringify(this.config.line_template)),
         JSON.parse(JSON.stringify(this.config.lines[i])));
       l.id = i;
       switch (l.type) {
@@ -80,13 +80,13 @@ Module.register("MMM-Paris-RATP-PG",{
           l.url = this.config.ratp_api + 'schedules/' + l.type + '/' + l.line.toString().toLowerCase() + '/' + l.stations + '/' + l.destination; // get schedule for that bus
           break;
         case 'traffic':
-          l.url = self.config.ratp_api + 'traffic/' +l.line[0] + '/' + l.line[1];
+          l.url = this.config.ratp_api + 'traffic/' +l.line[0] + '/' + l.line[1];
           break;
         default:
           if (this.config.debug) { console.log(' *** unknown request: ' + l.type)}
       }
       this.config.lines[i] = l;
-    });
+    }
     this.sendSocketNotification('SET_CONFIG', this.config);
     this.loaded = false;
       this.velibHistory = {};
@@ -104,18 +104,6 @@ Module.register("MMM-Paris-RATP-PG",{
 
   getHeader: function () {
     var header = this.data.header;
-    if (this.config.showSecondsToNextUpdate) {
-      var timeDifference = Math.round((this.config.updateInterval - new Date() + Date.parse(this.config.lastUpdate)) / 1000);
-      if (timeDifference > 0) {
-        header += ', next update in ' + timeDifference + 's';
-      } else {
-        header += ', update requested ' + Math.abs(timeDifference) + 's ago';
-      }
-    }
-    if (this.config.showLastUpdateTime) {
-      var now = this.config.lastUpdate;
-      header += (now ? (' @ ' + now.getHours() + ':' + (now.getMinutes() > 9 ? '' : '0') + now.getMinutes() + ':' + (now.getSeconds() > 9 ? '' : '0') + now.getSeconds()) : '');
-    }
     return header;
   },
 
@@ -133,7 +121,11 @@ Module.register("MMM-Paris-RATP-PG",{
     }
     var lines = this.config.lines;
     var l, d, n, firstLine, delta;
-
+    if (this.config.debug > 2) {
+      console.log ('updating RATP DOM');
+//      console.log (this.infos);
+      console.log(new Date());
+    }
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus;
@@ -143,12 +135,21 @@ Module.register("MMM-Paris-RATP-PG",{
       l = lines[i]; // line config
       d = this.infos[i]; // data received for the line
       firstLine =  true;
+      firstCellHeader = '';
+      if ((new Date() - Date.parse(d.lastUpdate) )/ 1000 > 0 && l.showUpdateAge) {
+        delta = Math.floor((new Date() - Date.parse(d.lastUpdate) )/ 1000 / 10);
+        if (delta <= 20) {
+          firstCellHeader += '&#' + (9312 + delta) + ';';
+        } else if (delta > 20) {
+          firstCellHeader += '&#9471;';
+        }
+      }
       switch (l.type) {
         case "traffic":
           row = document.createElement("tr");
           firstCell = document.createElement("td");
           firstCell.className = "align-right bright";
-          firstCell.innerHTML = l.label || l.line[1];
+          firstCell.innerHTML = firstCellHeader + (l.label || l.line[1]);
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.className = "align-left";
@@ -161,54 +162,46 @@ Module.register("MMM-Paris-RATP-PG",{
         case "metros":
         case "tramways":
         case "rers":
-          var nexts = d.schedule || [{message: 'N/A', destination: 'N/A'}];
+          var nexts = d.schedules || [{message: 'N/A', destination: 'N/A'}];
           for (var rank = 0; (rank < this.config.maximumEntries) && (rank < nexts.length); rank++) {
             n = nexts[rank]; //next transport
             row = document.createElement("tr");
-            var busNameCell = document.createElement("td");
-            busNameCell.className = "align-right bright";
-            busNameCell.innerHTML = firstLine ? l.label || l.line : ' ';
-            if (firstLine && (new Date() - Date.parse(d.lastUpdate) )/ 1000 / 60 > 1) {
-              delta = Math.florr((new Date() - Date.parse(d.lastUpdate) )/ 1000 / 60);
-              if (delta <= 20) {
-                busNameCell.innerHTML += '&#' + (9311 + delta) + ';';
-              } else if (delta > 20) {
-                busNameCell.innerHTML += '&#9471;';
-              }
-            }
-            row.appendChild(busNameCell);
+            var firstCell = document.createElement("td");
+            firstCell.className = "align-right bright";
+            firstCell.innerHTML = firstLine ? firstCellHeader + (l.label || l.line) : ' ';
+            row.appendChild(firstCell);
             var busDestinationCell = document.createElement("td");
             busDestinationCell.innerHTML = n.destination.substr(0, this.config.maxLettersForDestination);
             busDestinationCell.className = "align-left";
             row.appendChild(busDestinationCell);
             var depCell = document.createElement("td");
             depCell.className = "bright";
-            if (!n.schedule) {
-              depCell.innerHTML = "N/A ";
-            } else {
-              if (this.config.convertToWaitingTime && /^\d{1,2}[:][0-5][0-9]$/.test(n.message)) {
-                var transportTime = n.message.split(':');
-                var endDate = new Date(0, 0, 0, transportTime[0], transportTime[1]);
-                var startDate = new Date(0, 0, 0, now.getHours(), now.getMinutes(), now.getSeconds());
-                var waitingTime = endDate - startDate;
-                if (startDate > endDate) {
+            if (this.config.convertToWaitingTime && /^\d{1,2}[:][0-5][0-9]$/.test(n.message)) {
+              var transportTime = n.message.split(':');
+              var trainDate = new Date(0, 0, 0, transportTime[0], transportTime[1]);
+              var startDate = new Date(0, 0, 0, now.getHours(), now.getMinutes(), now.getSeconds());
+              var waitingTime = trainDate - startDate;
+              if (startDate > trainDate ) {
+                if (startDate - trainDate < 1000 * 60 * 2) {
+                  waitingTime = 0;
+                } else {
                   waitingTime += 1000 * 60 * 60 * 24;
                 }
-                waitingTime = Math.floor(waitingTime / 1000 / 60);
-                depCell.innerHTML = waitingTime + ' mn';
-              } else {
-                depCell.innerHTML = n.message;
               }
+              waitingTime = Math.floor(waitingTime / 1000 / 60);
+              depCell.innerHTML = waitingTime + ' mn';
+            } else {
+              depCell.innerHTML = n.message;
             }
             depCell.innerHTML = depCell.innerHTML.substr(0, this.config.maxLettersForTime);
             row.appendChild(depCell);
             if (this.config.concatenateArrivals && !firstLine && (n.destination == previousDestination)) {
-              previousMessage += ' / ' + n.message;
+              previousMessage += ' / ' + depCell.innerHTML;
               previousRow.getElementsByTagName('td')[2].innerHTML = previousMessage;
             } else {
               table.appendChild(row);
               previousRow = row;
-              previousMessage = n.message;
+              previousMessage = depCell.innerHTML;
               previousDestination = n.destination;
             }
             firstLine = false;
@@ -220,81 +213,6 @@ Module.register("MMM-Paris-RATP-PG",{
       firstLine = true;
       var stop = this.config.busStations[busIndex];
       switch (stop.type) {
-        case "traffic":
-          stopIndex = 'traffic' + '/' + stop.line[0].toString().toLowerCase() + '/' + stop.line[1].toString().toLowerCase();
-          row = document.createElement("tr");
-          firstCell = document.createElement("td");
-          firstCell.className = "align-right bright";
-          firstCell.innerHTML = stop.label || stop.line[1];
-          row.appendChild(firstCell);
-          secondCell = document.createElement("td");
-          secondCell.className = "align-left";
-          secondCell.innerHTML = this.ratpTraffic[stopIndex] ? this.config.conversion[this.ratpTraffic[stopIndex].message] || this.ratpTraffic[stopIndex].message : 'N/A';
-          secondCell.colSpan = 2;
-          row.appendChild(secondCell);
-          table.appendChild(row);
-          break;
-        case "bus":
-        case "metros":
-        case "tramways":
-        case "rers":
-          stopIndex = stop.line.toString().toLowerCase() + '/' + stop.stations + '/' + stop.destination;
-          var comingBuses = this.busSchedules[stopIndex] || [{message: 'N/A', destination: 'N/A'}];
-          var comingBusLastUpdate = this.busLastUpdate[stopIndex];
-          for (var comingIndex = 0; (comingIndex < this.config.maximumEntries) && (comingIndex < comingBuses.length); comingIndex++) {
-            row = document.createElement("tr");
-            comingBus = comingBuses[comingIndex];
-            var busNameCell = document.createElement("td");
-            busNameCell.className = "align-right bright";
-            if (firstLine) {
-              busNameCell.innerHTML = stop.label || stop.line;
-            } else {
-              busNameCell.innerHTML = ' ';
-            }
-            row.appendChild(busNameCell);
-
-            var busDestination = document.createElement("td");
-            busDestination.innerHTML = comingBus.destination.substr(0, this.config.maxLettersForDestination);
-            busDestination.className = "align-left";
-            row.appendChild(busDestination);
-
-            var depCell = document.createElement("td");
-            depCell.className = "bright";
-            if (!this.busSchedules[stopIndex]) {
-              depCell.innerHTML = "N/A ";
-            } else {
-              if (this.config.convertToWaitingTime && /^\d{1,2}[:][0-5][0-9]$/.test(comingBus.message)) {
-                var transportTime = comingBus.message.split(':');
-                var endDate = new Date(0, 0, 0, transportTime[0], transportTime[1]);
-                var startDate = new Date(0, 0, 0, now.getHours(), now.getMinutes(), now.getSeconds());
-                var waitingTime = endDate - startDate;
-                if (startDate > endDate) {
-                  waitingTime += 1000 * 60 * 60 * 24;
-                }
-                waitingTime = Math.floor(waitingTime / 1000 / 60);
-                depCell.innerHTML = waitingTime + ' mn';
-              } else {
-                depCell.innerHTML = comingBus.message;
-              }
-            }
-            depCell.innerHTML = depCell.innerHTML.substr(0, this.config.maxLettersForTime);
-            row.appendChild(depCell);
-            if ((new Date() - Date.parse(comingBusLastUpdate)) > (this.config.oldUpdateThreshold ? this.config.oldUpdateThreshold : (this.config.updateInterval * (1 + this.config.oldThreshold)) )) {
-              busDestination.style.opacity = this.config.oldUpdateOpacity;
-              depCell.style.opacity = this.config.oldUpdateOpacity;
-            }
-            if (this.config.concatenateArrivals && !firstLine && (comingBus.destination == previousDestination)) {
-              previousMessage += ' / ' + comingBus.message;
-              previousRow.getElementsByTagName('td')[2].innerHTML = previousMessage;
-            } else {
-              table.appendChild(row);
-              previousRow = row;
-              previousMessage = comingBus.message;
-              previousDestination = comingBus.destination;
-            }
-            firstLine = false;
-          }
-          break;
         case 'velib':
           row = document.createElement("tr");
           if (this.velibHistory[stop.stations]) {
