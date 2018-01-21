@@ -16,18 +16,26 @@ module.exports = NodeHelper.create({
   start: function () {
     this.started = false;
   },
-  
+
   socketNotificationReceived: function(notification, payload) {
     const self = this;
     if (notification === 'SET_CONFIG' && this.started == false) {
-      this.config = payload;	     
+      this.config = payload;
       if (this.config.debug) {
-        console.log (' *** config set in node_helper: ');
+        console.log (' *** config received from MMM.js & set in node_helper: ');
         console.log ( payload );
       }
       this.started = true;
-      self.scheduleUpdate(this.config.initialLoadDelay);
-      self.pluieScheduleUpdate(this.config.initialLoadDelay);
+      this.config.lines.forEach(function(l){
+        setTimeout(function(){
+          if (this.config.debug) {
+            console.log (' *** line ' + l.label + ' intial update in ' + l.initialLoadDelay);
+          }
+          self.fetchHandleAPI(l);
+        }, l.initialLoadDelay);
+      });
+//        self.scheduleUpdate(this.config.initialLoadDelay);
+//        self.pluieScheduleUpdate(this.config.initialLoadDelay);
     }
   },
 
@@ -47,7 +55,7 @@ module.exports = NodeHelper.create({
       self.updateTimetable();
     }, nextLoad);
   },
-  
+
   pluieScheduleUpdate: function(delay) {
     var nextLoad = this.config.pluieUpdateInterval;
     if (typeof delay !== "undefined" && delay >= 0) {
@@ -60,7 +68,63 @@ module.exports = NodeHelper.create({
       self.updatePluie();
     }, nextLoad);
   },
-  
+
+  fetchHandleAPI: function(_l) {
+    var self = this, _url = _l.url, retry = true;
+    if (this.config.debug) { console.log (' *** fetching: ' + _url);}
+    unirest.get(_url)
+      .header({
+        'Accept': 'application/json;charset=utf-8'
+      })
+      .end(function(response){
+        if (response && response.body) {
+          if (self.config.debug) {
+            console.log (' *** received answer for: ' + _l.label);
+            console.log (' for line: ');
+            console.log (_l);
+            console.log (' response:');
+            console.log (response);
+          }
+          switch (_l.type) {
+            case'pluie':
+//              self.processPluie(response, _l);
+              break;
+            case 'tramways':
+            case 'bus':
+            case 'rers':
+            case 'metros':
+              self.processRATP(response, _l);
+              break;
+            case 'traffic':
+              self.processTraffic(response, _l);
+              break;
+            default:
+              if (this.config.debug) {
+                console.log(' *** unknown request: ' + l.type);
+              }
+          }
+        } else {
+          if (self.config.debug) {
+            if (response) {
+              console.log (' *** partial response received for: ' + _l.label);
+              console.log (response);
+            } else {
+              console.log (' *** no response received for: ' + _l.label);
+            }
+          }
+        }
+        if (self.config.debug) { console.log (' *** getResponse: set retry for ' + _l.label); }
+      })
+    if (retry) {
+      if (this.config.debug) {
+        console.log (' *** line ' + _l.label + ' intial update in ' + _l.updateInterval);
+      }
+      setTimeout(function() {
+        self.fetchHandleAPI(_l);
+      }, _l.updateInterval);
+    }
+  },
+
   getResponse: function(_url, _processFunction, _stopConfig) {
     var self = this;
     var retry = true;
@@ -130,12 +194,18 @@ module.exports = NodeHelper.create({
       }
     }
   },
-  
+
   updatePluie: function() {
+      var self = this;
+      var url;
+      url = self.config.pluieAPI + self.config.pluiePlaces[0].id;
+      self.getResponse(url, self.processPluie.bind(this));
+  },
+
+  updateLine: function(l) {
     var self = this;
     var url;
-    url = self.config.pluieAPI + self.config.pluiePlaces[0].id;
-    self.getResponse(url, self.processPluie.bind(this));
+    if (self.config.debug) { console.log (' *** fetching update for ' + l.label);}
   },
 
   processVelib: function(data) {
@@ -149,9 +219,9 @@ module.exports = NodeHelper.create({
     this.velib.bike = record.available_bikes;
     this.velib.lastUpdate = record.last_update;
     this.velib.loaded = true;
-    this.sendSocketNotification("VELIB", this.velib);
+    //this.sendSocketNotification("VELIB", this.velib);
   },
-  
+
   processPluie: function(data) {
     this.pluie = {};
     if (this.config.debug) {
@@ -161,13 +231,14 @@ module.exports = NodeHelper.create({
     this.pluie.lastUpdate = data.lastUpdate;
     this.pluie.niveauPluieText = data.niveauPluieText;
     this.pluie.loaded = true;
-    this.sendSocketNotification("PLUIE", this.pluie);
+    //this.sendSocketNotification("PLUIE", this.pluie);
   },
 
-  processBus: function(data, stopConfig) {
+  processBus: function(data, _l) {
     var idMaker;
     if (this.config.debug) { console.log (' *** processBus data'); console.log (data); }
     this.schedule = {};
+    //*** is this if linked to v2 vs v3 or to the transportation mode ?
     if (data.response) {
       idMaker = data.response.informations;
       this.schedule.id = idMaker.line.toString().toLowerCase() + '/' + (idMaker.station.id_station || idMaker.station.id) + '/' + (idMaker.destination.id_destination || idMaker.destination.id);
@@ -176,12 +247,13 @@ module.exports = NodeHelper.create({
       this.schedule.id = idMaker[idMaker.length - 3] + '/' + idMaker[idMaker.length - 2] + '/' + idMaker[idMaker.length - 1];
     }
     this.schedule.schedules = data.response ? data.response.schedules : data.result.schedules;
-    this.schedule.lastUpdate = new Date();
+    this.config.infos[_l.id].schedule = this.schedule.schedules;
+    this.config.infos[_l.id].lastUpdate = new Date();
     this.loaded = true;
-    this.sendSocketNotification("BUS", this.schedule);
+    this.sendSocketNotification("DATA", this.config.infos);
   },
 
-  processTraffic: function (data, stopConfig) {
+  processTraffic: function (data, _l) {
     var result, idMaker;
     if (this.config.debug) {
       console.log('response receive: ');
@@ -194,9 +266,10 @@ module.exports = NodeHelper.create({
       idMaker = data._metadata.call.split('/');
     }
     result.id = idMaker[idMaker.length - 3].toString().toLowerCase() + '/' + idMaker[idMaker.length - 2].toString().toLowerCase() + '/' + idMaker[idMaker.length - 1].toString().toLowerCase();
-    result.lastUpdate = new Date();
     result.loaded = true;
-    this.sendSocketNotification("TRAFFIC", result);
+    this.config.infos[_l.id].status = result;
+    this.config.infos[_l.id].lastUpdate = new Date();
+    this.sendSocketNotification("DATA", this.config.infos);
   }
 
 });
