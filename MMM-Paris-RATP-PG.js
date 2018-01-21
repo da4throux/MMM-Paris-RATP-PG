@@ -45,16 +45,6 @@ Module.register("MMM-Paris-RATP-PG",{
       initialLoadDelay: 0, // start delay seconds
       showUpdateAge: true,
     },
-    types:['bus', 'rers', 'traffic', 'tramways', 'metros', 'pluie'],
-    lines: [
-//      {type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', label: '38', updateInterval: 1 * 20 * 1000},
-      {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', updateInterval: 1 * 10 * 1000},
-//      {type: 'traffic', line: ['rers', 'B']},
-//      {type: 'traffic', line: ['tramways', 1], label: 'T1'}, //label to avoid confusion with metros line 1
-//      {type: 'tramways', line: '3a', stations: 'georges+brassens', destination: 'R', label: '3a'},
-//      {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6'},
-      {type: 'pluie', id: '751140', name: 'Home', updateInterval: 1 * 5 * 60 * 1000, label: 'pluie'},
-    ],
   },
 
   // Define required scripts.
@@ -82,6 +72,8 @@ Module.register("MMM-Paris-RATP-PG",{
         case 'traffic':
           l.url = this.config.ratp_api + 'traffic/' +l.line[0] + '/' + l.line[1];
           break;
+        case 'pluie':
+          l.url = this.config.pluie_api + l.place;
         default:
           if (this.config.debug) { console.log(' *** unknown request: ' + l.type)}
       }
@@ -89,12 +81,6 @@ Module.register("MMM-Paris-RATP-PG",{
     }
     this.sendSocketNotification('SET_CONFIG', this.config);
     this.loaded = false;
-      this.velibHistory = {};
-      this.ratpLastUpdate = {};
-      this.busLastUpdate = {};
-      this.busSchedules = {};
-      this.updateTimer = null;
-      this.pluieStatus = {};
     var self = this;
     setInterval(function () {
       self.caller = 'updateInterval';
@@ -121,11 +107,6 @@ Module.register("MMM-Paris-RATP-PG",{
     }
     var lines = this.config.lines;
     var l, d, n, firstLine, delta;
-    if (this.config.debug > 2) {
-      console.log ('updating RATP DOM');
-//      console.log (this.infos);
-      console.log(new Date());
-    }
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus;
@@ -206,132 +187,22 @@ Module.register("MMM-Paris-RATP-PG",{
             }
             firstLine = false;
           }
-      }
-    }
- /*
-    for (var busIndex = 0; busIndex < this.config.busStations.length; busIndex++) {
-      firstLine = true;
-      var stop = this.config.busStations[busIndex];
-      switch (stop.type) {
-        case 'velib':
-          row = document.createElement("tr");
-          if (this.velibHistory[stop.stations]) {
-            var station = this.velibHistory[stop.stations].slice(-1)[0];
-            if (this.config.trendGraphOff) {
-              var velibStation = document.createElement("td");
-              velibStation.className = "align-left";
-              velibStation.innerHTML = station.total;
-              row.appendChild(velibStation);
-              var velibStatus = document.createElement("td");
-              velibStatus.className = "bright";
-              velibStatus.innerHTML = station.bike + ' velibs ' + station.empty + ' spaces';
-              row.appendChild(velibStatus);
-              var velibName = document.createElement("td");
-              velibName.className = "align-right";
-              velibName.innerHTML = stop.label || station.name;
-              row.appendChild(velibName);
-            } else {
-              var rowTrend = document.createElement("tr");
-              var cellTrend = document.createElement("td");
-              var trendGraph = document.createElement('canvas');
-              trendGraph.className = "velibTrendGraph";
-              trendGraph.width  = this.config.velibTrendWidth || 400;
-              trendGraph.height = this.config.velibTrendHeight || 100;
-              trendGraph.timeScale = this.config.velibTrendDay ? 24 * 60 * 60 : this.config.velibTrendTimeScale || 60 * 60; // in nb of seconds, the previous hour
-              this.config.velibTrendZoom = this.config.velibTrendZoom || 30 * 60; //default zoom windows is 30 minutes for velibTrendDay
-              var ctx = trendGraph.getContext('2d');
-              var currentStation = this.velibHistory[stop.stations];
-              var previousX = trendGraph.width;
-              var inTime = false;
-              for (var dataIndex = currentStation.length - 1; dataIndex >= 0 ; dataIndex--) { //start from most recent
-                var dataTimeStamp = (now - new Date(currentStation[dataIndex].lastUpdate)) / 1000; // time of the event in seconds ago
-                if (dataTimeStamp < trendGraph.timeScale || inTime) {
-                  inTime = dataTimeStamp < trendGraph.timeScale; // compute the last one outside of the time window
-                  if (dataTimeStamp - trendGraph.timeScale < 10 * 60) { //takes it only if it is within 10 minutes of the closing windows
-                    dataTimeStamp = Math.min(dataTimeStamp, trendGraph.timeScale); //to be sure it does not exit the graph
-                    var x, y;
-                    if (this.config.velibTrendDay) {
-                      if ( dataTimeStamp  < this.config.velibTrendZoom ) { //1st third in zoom mode
-                        x = (1 - dataTimeStamp / this.config.velibTrendZoom / 3) * trendGraph.width;
-                      } else if (dataTimeStamp < trendGraph.timeScale - this.config.velibTrendZoom) { //middle in compressed mode
-                        x = (2/3 - (dataTimeStamp - this.config.velibTrendZoom) / (trendGraph.timeScale - 2 * this.config.velibTrendZoom)/ 3) * trendGraph.width;
-                      } else {
-                        x = (1 / 3 - (dataTimeStamp - trendGraph.timeScale + this.config.velibTrendZoom)/ this.config.velibTrendZoom / 3) * trendGraph.width;
-                      }
-                    } else {
-                      x = (1 - dataTimeStamp / trendGraph.timeScale) * trendGraph.width;
-                    }
-                    y = currentStation[dataIndex].bike / currentStation[dataIndex].total * trendGraph.height * 4 / 5;
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(x, trendGraph.height - y - 1, previousX - x, Math.max(y, 1)); //a thin line even if it's zero
-                    previousX = x;
-                  }
-                }
-              }
-//              var bodyStyle = window.getComputedStyle(document.getElementsByTagName('body')[0], null);
-//              ctx.font = bodyStyle.getPropertyValue(('font-size')) + ' ' + ctx.font.split(' ').slice(-1)[0]; //00px sans-serif
-              ctx.font = Math.round(trendGraph.height / 5) + 'px ' + ctx.font.split(' ').slice(-1)[0];
-              ctx.fillStyle = 'grey';
-              ctx.textAlign = 'center';
-              ctx.fillText(stop.label || station.name, trendGraph.width / 2, Math.round(trendGraph.height / 5));
-              ctx.textAlign = 'left';
-              ctx.fillText(station.bike, 10, trendGraph.height - 10);
-              ctx.fillText(station.empty, 10, Math.round(trendGraph.height / 5) + 10);
-              if (this.config.velibTrendDay) {
-                ctx.font = Math.round(trendGraph.height / 10) + 'px ' + ctx.font.split(' ').slice(-1)[0];
-                ctx.fillText(Math.round(this.config.velibTrendZoom / 60) + 'mn', trendGraph.width * 5 / 6, trendGraph.height / 2);
-                ctx.fillText(Math.round(this.config.velibTrendZoom / 60) + 'mn', trendGraph.width / 6, trendGraph.height / 2);
-                ctx.strokeStyle = 'grey';
-                ctx.setLineDash([5, 15]);
-                ctx.beginPath();
-                ctx.moveTo(2/3 * trendGraph.width, 0);
-                ctx.lineTo(2/3 * trendGraph.width, 100);
-                ctx.stroke();
-                ctx.moveTo(trendGraph.width / 3, 0);
-                ctx.lineTo(trendGraph.width / 3, 100);
-                ctx.stroke();
-                var hourMark = new Date(); var alpha;
-                hourMark.setMinutes(0); hourMark.setSeconds(0);
-                alpha = (hourMark - now + 24 * 60 * 60 * 1000 - this.config.velibTrendZoom * 1000) / (24 * 60 * 60 * 1000 - 2 * this.config.velibTrendZoom * 1000);
-                alpha = (hourMark - now + this.config.velibTrendZoom * 1000) / (24 * 60 * 60 * 1000) * trendGraph.width;
-                for (var h = 0; h < 24; h = h + 2) {
-                  ctx.fillStyle = 'red';
-                  ctx.textAlign = 'center';
-                  ctx.font = Math.round(trendGraph.height / 12) + 'px';
-                  ctx.fillText((hourMark.getHours() + 24 - h) % 24, (2 - h / 24) * trendGraph.width / 3 + alpha, h % 12 * trendGraph.height / 12 / 3 + trendGraph.height / 3);
-                }
-              }
-              cellTrend.colSpan = '3'; //so that it takes the whole row
-              cellTrend.appendChild(trendGraph);
-              rowTrend.appendChild(cellTrend);
-              table.appendChild(rowTrend);
-            }
-          } else {
-            var message = document.createElement("td");
-            message.className = "bright";
-            message.innerHTML = (stop.label || stop.stations) + ' no info yet';
-            row.appendChild(message);
-          }
-          table.appendChild(row);
           break;
+        case "pluie":
+          row = document.createElement("tr");
+          firstCell = document.createElement("td");
+          firstCell.className = "align-right bright";
+          firstCell.innerHTML = firstCellHeader + (l.name || 'temps');
+          row.appendChild(firstCell);
+          secondCell = document.createElement("td");
+          secondCell.className = "align-left";
+          secondCell.innerHTML = d.niveauPluieText.join('</br>');
+          secondCell.colSpan = 2;
+          row.appendChild(secondCell);
+          table.appendChild(row);
+        break;
       }
     }
-    if (this.config.pluie) {
-      for (var index = 0; index < this.config.pluiePlaces.length; index++) {
-        row = document.createElement("tr");
-        firstCell = document.createElement("td");
-        firstCell.className = "align-right bright";
-        firstCell.innerHTML = this.config.pluiePlaces[index].name;
-        row.appendChild(firstCell);
-        secondCell = document.createElement("td");
-        secondCell.className = "align-left";
-        secondCell.innerHTML = this.pluieStatus[this.config.pluiePlaces[index].id] ? this.pluieStatus[this.config.pluiePlaces[index].id].niveauPluieText.join('</br>') : 'N/A';
-        secondCell.colSpan = 2;
-        row.appendChild(secondCell);
-        table.appendChild(row);
-      }
-    }
-    */
     return wrapper;
   },
 
@@ -344,69 +215,6 @@ Module.register("MMM-Paris-RATP-PG",{
       case "DATA":
         this.infos = payload;
         this.loaded = true;
-        break;
-      case "VELIB":
-        if (!this.velibHistory[payload.id]) { // loading of data
-          this.velibHistory[payload.id] = localStorage[payload.id] ? JSON.parse(localStorage[payload.id]) : [];
-          while ((this.velibHistory[payload.id].length > 0) && (((now - new Date(this.velibHistory[payload.id][0].lastUpdate)) / 1000) > maxVelibArchiveAge) ) {
-            this.velibHistory[payload.id].shift();
-            velibArchiveCleaned++;
-          }
-          if (this.config.debug) {
-            console.log (' *** First load size of velib History for ' + payload.id + ' is: ' + this.velibHistory[payload.id].length);
-            console.log (velibArchiveCleaned + ' elements removed');
-            console.log (this.velibHistory[payload.id]);
-          }
-          this.velibHistory[payload.id].push(payload);
-          localStorage[payload.id] = JSON.stringify(this.velibHistory[payload.id]);
-          if (this.config.debug) {console.log (' *** size of velib History for ' + payload.id + ' is: ' + this.velibHistory[payload.id].length);}
-          this.updateDom();
-        } else if (this.velibHistory[payload.id][this.velibHistory[payload.id].length - 1].lastUpdate != payload.lastUpdate) {
-          while ((this.velibHistory[payload.id].length > 0) && (((now - new Date(this.velibHistory[payload.id][0].lastUpdate)) / 1000) > maxVelibArchiveAge) ) {
-            this.velibHistory[payload.id].shift();
-            velibArchiveCleaned++;
-          }
-          this.velibHistory[payload.id].push(payload);
-          localStorage[payload.id] = JSON.stringify(this.velibHistory[payload.id]);
-          this.updateDom();
-          if (this.config.debug) {
-            console.log (' *** Update - size of velib History for ' + payload.id + ' is: ' + this.velibHistory[payload.id].length);
-            console.log (velibArchiveCleaned + ' elements removed');
-            console.log (this.velibHistory[payload.id]);
-          }
-        } else {
-          if (this.config.debug) {
-            console.log(' *** redundant velib payload for ' + payload.id + ' with time ' + payload.lastUpdate + ' && ' + this.velibHistory[payload.id][this.velibHistory[payload.id].length - 1].lastUpdate);
-          }
-        }
-        this.loaded = true;
-        break;
-      case "UPDATE":
-        this.config.lastUpdate = payload.lastUpdate;
-        this.updateDom();
-        break;
-      case "PLUIE":
-        if (this.config.debug) {
-          console.log(' *** received pluie information for: ' + payload.id);
-          console.log(payload);
-        }
-        pluieTypes = JSON.parse(localStorage['pluieTypes'] || '[]');
-        pluieTypesChanged = false;
-        for (var index = 0; index < payload.niveauPluieText.length; index++) {
-          pluieType = payload.niveauPluieText[index].split(":").pop();
-          if (!pluieTypes.includes(pluieType)) {
-            pluieTypes.push(pluieType);
-            pluieTypesChanged = true;
-          }
-        }
-        if (pluieTypesChanged) {
-          console.log ('*** new pluieType: ') + JSON.stringify(pluieTypes);
-          localStorage['pluieTypes'] = JSON.stringify(pluieTypes);
-        }
-        localStorage['pluieTypes'] = JSON.stringify(pluieTypes);
-        this.pluieStatus[payload.id] = payload;
-        this.loaded = true;
-        this.updateDom();
         break;
     }
   }
