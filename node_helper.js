@@ -97,6 +97,7 @@ module.exports = NodeHelper.create({
     _p.lastUpdateData = data.lastUpdate; //? useful
     _p.lastUpdate = new Date();
     _p.niveauPluieText = data.niveauPluieText;
+    _p.dataCadran = data.dataCadran;
     this.loaded = true;
     this.sendSocketNotification("DATA", this.config.infos);
   },
