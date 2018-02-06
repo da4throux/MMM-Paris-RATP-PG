@@ -25,6 +25,12 @@ Module.register("MMM-Paris-RATP-PG",{
       "Précipitations modérés": 'wi-day-rain',
       "Précipidations fortes": 'wi-day-storm-showers',
     },
+    pluieIconColors: {
+      "Pas de précipitations" : 'blue',
+      "Précipitations faibles": 'yellow',
+      "Précipitations modérés": 'orange',
+      "Précipidations fortes": 'red',
+    },
     line_template: {
       updateInterval: 1 * 60 * 1000,
       maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
@@ -47,6 +53,9 @@ Module.register("MMM-Paris-RATP-PG",{
     var l;
     Log.info("Starting module: " + this.name);
     this.config.infos = [];
+    if (!this.config.lines) {
+      this.config.lines = [];
+    }
     for (i=0; i < this.config.lines.length; i++) {
       this.config.infos[i]={};
       l = Object.assign(JSON.parse(JSON.stringify(this.config.line_template)),
@@ -87,21 +96,25 @@ Module.register("MMM-Paris-RATP-PG",{
   getDom: function() {
     var now = new Date();
     var wrapper = document.createElement("div");
-
-    if (!this.loaded) {
-      wrapper.innerHTML = "Loading connections ...";
-      wrapper.className = "dimmed light small";
-      return wrapper;
-    } else {
-      wrapper.className = "paristransport";
-    }
     var lines = this.config.lines;
-    var l, d, n, firstLine, delta;
+    var l, d, n, firstLine, delta, lineColor;
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus, iconSize, nexts;
-    wrapper.appendChild(table);
-    table.className = "small";
+    if (lines.length > 0) {
+      if (!this.loaded) {
+        wrapper.innerHTML = "Loading connections ...";
+        wrapper.className = "dimmed light small";
+        return wrapper;
+      } else {
+        wrapper.className = "paristransport";
+        wrapper.appendChild(table);
+        table.className = "small";
+      }
+    } else {
+      wrapper.className = "small";
+      wrapper.innerHTML = "Configuration now requires a 'lines' element.<br />Check github da4throux/MMM-Paris-RATP-PG<br />for more information";
+    }
     for (var i = 0; i < lines.length; i++) {
       l = lines[i]; // line config
       d = this.infos[i]; // data received for the line
@@ -115,17 +128,28 @@ Module.register("MMM-Paris-RATP-PG",{
           firstCellHeader += '&#9471;';
         }
       }
+      lineColor = l.lineColor ? 'color:' + l.lineColor + ' !important' : false;
       switch (l.type) {
         case "traffic":
           row = document.createElement("tr");
+          row.id = 'line-' + i;
           firstCell = document.createElement("td");
           firstCell.className = "align-right bright";
           firstCell.innerHTML = firstCellHeader + (l.label || l.line[1]);
+          if (lineColor) {
+              firstCell.setAttribute('style', lineColor);
+          }
+          if (l.firstCellColor) {
+              firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+          }
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.className = "align-left";
           secondCell.innerHTML = d.status ? this.config.conversion[d.status.message] || d.status.message : 'N/A';
           secondCell.colSpan = 2;
+          if (lineColor) {
+              secondCell.setAttribute('style', lineColor);
+          }
           row.appendChild(secondCell);
           table.appendChild(row);
           break;
@@ -137,13 +161,23 @@ Module.register("MMM-Paris-RATP-PG",{
           for (var rank = 0; (rank < l.maximumEntries) && (rank < nexts.length); rank++) {
             n = nexts[rank]; //next transport
             row = document.createElement("tr");
+            row.id = 'line-' + i + '-' + 'rank';
             var firstCell = document.createElement("td");
             firstCell.className = "align-right bright";
             firstCell.innerHTML = firstLine ? firstCellHeader + (l.label || l.line) : ' ';
+            if (lineColor) {
+              firstCell.setAttribute('style', lineColor);
+            }
+            if (l.firstCellColor) {
+              firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+            }
             row.appendChild(firstCell);
             var busDestinationCell = document.createElement("td");
             busDestinationCell.innerHTML = n.destination.substr(0, l.maxLettersForDestination);
             busDestinationCell.className = "align-left";
+            if (lineColor) {
+              busDestinationCell.setAttribute('style', lineColor);
+            }
             row.appendChild(busDestinationCell);
             var depCell = document.createElement("td");
             depCell.className = "bright";
@@ -165,6 +199,9 @@ Module.register("MMM-Paris-RATP-PG",{
               depCell.innerHTML = n.message;
             }
             depCell.innerHTML = depCell.innerHTML.substr(0, l.maxLettersForTime);
+            if (lineColor) {
+              depCell.setAttribute('style', lineColor);
+            }
             row.appendChild(depCell);
             if (l.concatenateArrivals && !firstLine && (n.destination == previousDestination)) {
               previousMessage += ' / ' + depCell.innerHTML;
@@ -180,12 +217,22 @@ Module.register("MMM-Paris-RATP-PG",{
           break;
         case "pluie":
           row = document.createElement("tr");
+          row.id = 'line-' + i;
           firstCell = document.createElement("td");
           firstCell.className = "align-right bright";
           firstCell.innerHTML = firstCellHeader + (l.name || 'temps');
+          if (lineColor) {
+            firstCell.setAttribute('style', lineColor);
+          }
+          if (l.firstCellColor) {
+            firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+          }
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.colSpan = 2;
+          if (lineColor) {
+            secondCell.setAttribute('style', lineColor);
+          }
           if (l.pluieAsText) {
             secondCell.className = "align-left";
             secondCell.innerHTML = d.niveauPluieText.join('</br>');
@@ -194,7 +241,9 @@ Module.register("MMM-Paris-RATP-PG",{
             secondCell.innerHTML = '';
             iconSize = l.iconSize ? "font-size: " + l.iconSize + "em" : "";
             for (i = 0; i < d.dataCadran.length; i++) {
-              secondCell.innerHTML += '<i id="' + l.place + 'pluie' + i + '" class="wi ' + this.config.pluieIconConverter[d.dataCadran[i].niveauPluieText] + '" style="' + iconSize+ ';"></i>';
+              var iconColor = '';
+              iconColor = this.config.pluieIconColor ? 'color:' + this.config.pluieIconColors[d.dataCadran[i].niveauPluieText] + ' !important;' : '';
+              secondCell.innerHTML += '<i id="' + l.place + 'pluie' + i + '" class="wi ' + this.config.pluieIconConverter[d.dataCadran[i].niveauPluieText] + '" style="' + iconSize+ ';' + iconColor + '"></i>';
             }
           }
           row.appendChild(secondCell);
