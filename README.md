@@ -59,7 +59,7 @@ Three different kind of objects are in the configuration:
 * label: Optional: to rename the object differently if needed
 * updateInterval: optional, int, default: 60000, time in ms between pulling request for new times (update request)
 * showUpdateAge: optional, boolean, default = true, //add a circled integer next to the line name showing the tenths digits of the number of seconds elapsed since update.
-* firstCellColor: optional, color name, // typically first column of the line (superseed the line color)
+* firstCellColor: optional, color name, // typically first column of the line (superseed the line color): https://dataratp2.opendatasoft.com/explore/dataset/indices-et-couleurs-de-lignes-du-reseau-ferre-ratp/ or wikipedia can give you insights
 * lineColor: optional, color name, //set the color of the line
 ## Global element
 * debug: false, //console.log more things to help debugging
@@ -73,11 +73,13 @@ config: {
 				conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'},
 				debug: false,
         lines: [
-          {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: 'red', lineColor: 'Brown'},
-          {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', firstCellColor: 'Blue'},
-          {type: 'traffic', line: ['rers', 'B'], lineColor: 'blue'},
-          {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', lineColor: 'green'},
-          {type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Home', iconSize: 0.70},
+					{type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#0055c8'},
+          {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#dc9600'},
+          {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'R', firstCellColor: '#dc9600', lineColor: 'Brown'},
+          {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', firstCellColor: '#7BA3DC'},
+          {type: 'traffic', line: ['rers', 'B'], firstCellColor: 'Blue', lineColor: 'green'},
+          {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', firstCellColor: '#6ECA97'},
+          {type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Paris', iconSize: 0.70},
         ],
 			},
 ```
