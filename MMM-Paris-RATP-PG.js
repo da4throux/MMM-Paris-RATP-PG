@@ -73,6 +73,7 @@ Module.register("MMM-Paris-RATP-PG",{
           break;
         case 'pluie':
           l.url = this.config.pluie_api + l.place;
+          break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
@@ -97,7 +98,7 @@ Module.register("MMM-Paris-RATP-PG",{
     var now = new Date();
     var wrapper = document.createElement("div");
     var lines = this.config.lines;
-    var l, d, n, firstLine, delta, lineColor;
+    var i, j, l, d, n, firstLine, delta, lineColor;
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus, iconSize, nexts;
@@ -115,7 +116,7 @@ Module.register("MMM-Paris-RATP-PG",{
       wrapper.className = "small";
       wrapper.innerHTML = "Configuration now requires a 'lines' element.<br />Check github da4throux/MMM-Paris-RATP-PG<br />for more information";
     }
-    for (var i = 0; i < lines.length; i++) {
+    for (i = 0; i < lines.length; i++) {
       l = lines[i]; // line config
       d = this.infos[i]; // data received for the line
       firstLine =  true;
@@ -220,7 +221,7 @@ Module.register("MMM-Paris-RATP-PG",{
           row.id = 'line-' + i;
           firstCell = document.createElement("td");
           firstCell.className = "align-right bright";
-          firstCell.innerHTML = firstCellHeader + (l.name || 'temps');
+          firstCell.innerHTML = firstCellHeader + (l.label || l.place);
           if (lineColor) {
             firstCell.setAttribute('style', lineColor);
           }
@@ -240,15 +241,17 @@ Module.register("MMM-Paris-RATP-PG",{
             secondCell.className = "align-center";
             secondCell.innerHTML = '';
             iconSize = l.iconSize ? "font-size: " + l.iconSize + "em" : "";
-            for (i = 0; i < d.dataCadran.length; i++) {
+            for (j = 0; j < d.dataCadran.length; j++) {
               var iconColor = '';
-              iconColor = this.config.pluieIconColor ? 'color:' + this.config.pluieIconColors[d.dataCadran[i].niveauPluieText] + ' !important;' : '';
-              secondCell.innerHTML += '<i id="' + l.place + 'pluie' + i + '" class="wi ' + this.config.pluieIconConverter[d.dataCadran[i].niveauPluieText] + '" style="' + iconSize+ ';' + iconColor + '"></i>';
+              iconColor = l.pluieNoColor ? '' : 'color:' + this.config.pluieIconColors[d.dataCadran[j].niveauPluieText] + ' !important;';
+              secondCell.innerHTML += '<i id="' + l.place + 'pluie' + j + '" class="wi ' + this.config.pluieIconConverter[d.dataCadran[j].niveauPluieText] + '" style="' + iconSize+ ';' + iconColor + '"></i>';
             }
           }
           row.appendChild(secondCell);
           table.appendChild(row);
           break;
+        default:
+          if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
     }
     return wrapper;
