@@ -11,7 +11,7 @@ A module to display:
 * rain in the coming hour (as per Meteo France)
 
 # Screenshot
-![screenshot](https://github.com/da4throux/MMM-Paris-RATP-PG/blob/history/MMM-Paris-RATP-PG%202.0.png)
+![screenshot](https://github.com/da4throux/MMM-Paris-RATP-PG/blob/master/MMM-Paris-RATP-PG%202.0.png)
 
 # API
 
