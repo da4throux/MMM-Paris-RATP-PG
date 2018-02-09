@@ -39,8 +39,11 @@ Module.register("MMM-Paris-RATP-PG",{
       concatenateArrivals: true, //if for a transport there is the same destination and several times, they will be displayed on one line
       initialLoadDelay: 0, // start delay seconds
       showUpdateAge: true,
-      pluieAsText: false
+      pluieAsText: false,
+      conversion: {},
+      hideTraffic: [],
     },
+    updateDomFrequence: 10000,
   },
 
   // Define required scripts.
@@ -59,6 +62,7 @@ Module.register("MMM-Paris-RATP-PG",{
     for (i=0; i < this.config.lines.length; i++) {
       this.config.infos[i]={};
       l = Object.assign(JSON.parse(JSON.stringify(this.config.line_template)),
+        JSON.parse(JSON.stringify(this.config.lineDefault)),
         JSON.parse(JSON.stringify(this.config.lines[i])));
       l.id = i;
       switch (l.type) {
@@ -85,7 +89,7 @@ Module.register("MMM-Paris-RATP-PG",{
     setInterval(function () {
       self.caller = 'updateInterval';
       self.updateDom();
-    }, 1000);
+    }, this.config.updateDomFrequence);
   },
 
   getHeader: function () {
@@ -146,13 +150,15 @@ Module.register("MMM-Paris-RATP-PG",{
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.className = "align-left";
-          secondCell.innerHTML = d.status ? this.config.conversion[d.status.message] || d.status.message : 'N/A';
+          secondCell.innerHTML = d.status ? l.conversion[d.status.message] || d.status.message : 'N/A';
           secondCell.colSpan = 2;
           if (lineColor) {
               secondCell.setAttribute('style', lineColor);
           }
           row.appendChild(secondCell);
-          table.appendChild(row);
+          if (l.hideTraffic.indexOf(d.status.message) < 0) {
+            table.appendChild(row);
+          }
           break;
         case "bus":
         case "metros":
