@@ -45,6 +45,7 @@ Three different kind of objects are in the configuration:
 * destination: mandatory, either 'A' or 'R'
 ### Traffic
 * line: mandatory, based on https://api-ratp.pierre-grimaud.fr/v3/traffic set the line as: [type, line], such as: ['metros', 6], ['rers', 'A']...
+* hideTraffic: optional, array of string, if a traffic status belongs to the array, then the traffic is not shown (see the example for usage)
 ### Common in Transportation lines
 * maximumEntries: optional, int, default = 2, //if the APIs sends several results for the incoming transport how many should be displayed
 * converToWaitingTime: optional, boolean, default = true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
@@ -56,6 +57,7 @@ Three different kind of objects are in the configuration:
 * pluieAsText: optional, boolean, default = false, // show the weather in the coming hour as text and not icons
 * iconSize: optional, example: 0.70, //set the em for the weather icon (each icon is 5 minutes: i.e. there's 12 icons for an hour)
 ### common in all lines
+* common means: not shared value, but meaningful for all the lines
 * label: Optional: to rename the object differently if needed
 * updateInterval: optional, int, default: 60000, time in ms between pulling request for new times (update request)
 * showUpdateAge: optional, boolean, default = true, //add a circled integer next to the line name showing the tenths digits of the number of seconds elapsed since update.
@@ -63,15 +65,26 @@ Three different kind of objects are in the configuration:
 * lineColor: optional, color name, //set the color of the line
 ## Global element
 * debug: false, //console.log more things to help debugging
+## lineDefault
+* lineDefault contains properties that will be common to all lines, but can be superseed at the line level also: so any property from the line, can be set here also, but the following ones, make more sense here also:
 * conversion: object of key/ values to convert traffic message. Those message can be very long, and it might worth to convert them in a simpler text. by default:
   - conversion: {"Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'}
   - don't hesitate to add more when there's works on a specific line or others...
+* updateInterval: see above
 
 Config Example:
 ```javascript
 config: {
-				conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'},
 				debug: false,
+				lineDefault: {
+					hideTraffic: [
+            "le trafic est interrompu entre Aulnay et Aeroport Charles de Gaulle 2 TGV de 23:00 à fin de service jusqu'au 16/03/18. Bus de remplacement à dispo. (travaux de modernisation)",
+            "Trafic normal sur l'ensemble de la ligne.",
+            "le trafic est interrompu entre Nanterre-Prefecture et Cergy/ Poissy de 21:30 à fin de service jusqu'au 16/02/18. Bus de remplacement à dispo. (travaux)",
+          ],
+					conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'},
+					updateInterval: 1 * 2 * 60 * 1000,
+				},
         lines: [
 					{type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#0055c8'},
           {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#dc9600'},
