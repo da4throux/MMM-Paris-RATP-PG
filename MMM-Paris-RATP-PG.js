@@ -15,7 +15,6 @@ Module.register("MMM-Paris-RATP-PG",{
   defaults: {
     animationSpeed: 2000,
     debug: false, //console.log more things to help debugging
-    autolib_api: 'https://opendata.paris.fr/explore/dataset/stations_et_espaces_autolib_de_la_metropole_parisienne/api/', ///add '?q=' mais pas d'info temps réel... pour l'instant
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v3/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
@@ -32,7 +31,12 @@ Module.register("MMM-Paris-RATP-PG",{
       "Précipitations modérés": 'orange',
       "Précipidations fortes": 'red',
     },
-    line_template: {
+    autolibIconConverter: {
+     "cars" : 'car',
+     "parking" : 'map-marker',
+     "utilib" : 'wrench'
+   },
+   line_template: {
       updateInterval: 1 * 60 * 1000,
       maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
       maxLettersForDestination: 22, //will limit the length of the destination string
@@ -78,6 +82,9 @@ Module.register("MMM-Paris-RATP-PG",{
           break;
         case 'pluie':
           l.url = this.config.pluie_api + l.place;
+          break;
+        case 'autolib':
+          l.url = this.config.autolib_api + l.name;
           break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
@@ -257,6 +264,35 @@ Module.register("MMM-Paris-RATP-PG",{
           row.appendChild(secondCell);
           table.appendChild(row);
           break;
+        case "autolib":
+          row = document.createElement("tr");
+          row.id = 'line-' + i;
+          firstCell = document.createElement("td");
+          firstCell.className = "align-right bright";
+          firstCell.innerHTML = firstCellHeader + (l.label || l.place);
+          if (lineColor) {
+            firstCell.setAttribute('style', lineColor);
+          }
+          if (l.firstCellColor) {
+            firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+          }
+          row.appendChild(firstCell);
+          secondCell = document.createElement("td");
+          secondCell.colSpan = 2;
+          if (lineColor) {
+            secondCell.setAttribute('style', lineColor);
+          }
+          //secondCell.className = "aligncenter";
+          secondCell.style.align = "center";
+          secondCell.innerHTML = d.data.cars
+            + '<i id="line-' + i + '-voitures" class="fa fa-' + this.config.autolibIconConverter['cars'] + '"></i>'
+            + d.data.slots
+            + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['parking'] + '"></i>'
+            + d.data['cars_counter_utilib_1.4']
+            + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['utilib'] + '"></i>';
+          row.appendChild(secondCell);
+          table.appendChild(row);
+          break;          
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
