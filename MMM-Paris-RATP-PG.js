@@ -15,9 +15,9 @@ Module.register("MMM-Paris-RATP-PG",{
   defaults: {
     animationSpeed: 2000,
     debug: false, //console.log more things to help debugging
-    autolib_api: 'https://opendata.paris.fr/explore/dataset/stations_et_espaces_autolib_de_la_metropole_parisienne/api/', ///add '?q=' mais pas d'info temps réel... pour l'instant
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v3/',
+    autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     pluieIconConverter: {
       "Pas de précipitations" : 'wi-day-cloudy',
@@ -31,7 +31,15 @@ Module.register("MMM-Paris-RATP-PG",{
       "Précipitations modérés": 'orange',
       "Précipidations fortes": 'red',
     },
-    line_template: {
+    autolibIconConverter: {
+     "cars" : 'car',
+     "parking" : 'map-marker',
+     "utilib" : 'wrench',
+     "utilib-0.9" : 'cube',
+     "utilib-1.4" : 'cubes',
+     "charge" : 'bolt',
+   },
+   line_template: {
       updateInterval: 1 * 60 * 1000,
       maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
       maxLettersForDestination: 22, //will limit the length of the destination string
@@ -78,6 +86,9 @@ Module.register("MMM-Paris-RATP-PG",{
         case 'pluie':
           l.url = this.config.pluie_api + l.place;
           break;
+        case 'autolib':
+          l.url = this.config.autolib_api + l.name;
+          break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
@@ -102,7 +113,7 @@ Module.register("MMM-Paris-RATP-PG",{
     var now = new Date();
     var wrapper = document.createElement("div");
     var lines = this.config.lines;
-    var i, j, l, d, n, firstLine, delta, lineColor;
+    var i, j, l, d, n, firstLine, delta, lineColor, cars;
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus, iconSize, nexts;
@@ -255,6 +266,55 @@ Module.register("MMM-Paris-RATP-PG",{
           }
           row.appendChild(secondCell);
           table.appendChild(row);
+          break;
+        case "autolib":
+          row = document.createElement("tr");
+          row.id = 'line-' + i;
+          firstCell = document.createElement("td");
+          firstCell.className = "align-right bright";
+          firstCell.innerHTML = firstCellHeader + (l.label || l.place);
+          if (lineColor) {
+            firstCell.setAttribute('style', lineColor);
+          }
+          if (l.firstCellColor) {
+            firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+          }
+          row.appendChild(firstCell);
+          secondCell = document.createElement("td");
+          secondCell.colSpan = 2;
+          if (lineColor) {
+            secondCell.setAttribute('style', lineColor);
+          }
+          autolib = d.data['cars_counter_bluecar'];
+          cars = autolib + d.data['cars_counter_utilib_1.4'] + d.data['cars_counter_utilib'];
+          l.empty = cars < 1;
+          //secondCell.className = "aligncenter";
+          secondCell.style.align = "center";
+          secondCell.innerHTML = (l.utilib ? autolib : cars)
+            + '<i id="line-' + i + '-voitures" class="fa fa-' + this.config.autolibIconConverter['cars'] + '"></i>&nbsp';
+          if (l.utilib) {
+            secondCell.innerHTML +=
+              d.data['cars_counter_utilib_1.4']
+              + '<i id="line-' + i + '-utilib-1.4" class="fa fa-' + this.config.autolibIconConverter['utilib-1.4'] + '"></i>&nbsp'
+              + d.data['cars_counter_utilib']
+              + '<i id="line-' + i + '-utilib-0.9" class="fa fa-' + this.config.autolibIconConverter['utilib-0.9'] + '"></i>&nbsp';
+          }
+            secondCell.innerHTML +=
+              d.data.slots
+              + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['parking'] + '"></i>&nbsp'
+              + d.data['charge_slots']
+              + '<i id="line-' + i + '-charge" class="fa fa-' + this.config.autolibIconConverter['charge'] + '"></i>';
+          row.appendChild(secondCell);
+          if (l.backup) {
+            for (j = 0; j < lines.length; j++) {
+              if ((lines[j].name === l.backup) && lines[j].empty) {
+                table.appendChild(row);
+                break;
+              }
+            }
+          } else {
+            table.appendChild(row);
+          }
           break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}

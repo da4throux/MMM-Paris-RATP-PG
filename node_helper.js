@@ -62,6 +62,9 @@ module.exports = NodeHelper.create({
             case 'traffic':
               self.processTraffic(response.body, _l);
               break;
+            case 'autolib':
+              self.processAutolib(response.body, _l);
+              break;
             default:
               if (this.config.debug) {
                 console.log(' *** unknown request: ' + l.type);
@@ -88,6 +91,14 @@ module.exports = NodeHelper.create({
       }, _l.updateInterval);
     }
   },
+
+  processAutolib: function (data, _l) {
+    this.config.infos[_l.id].lastUpdate = new Date();
+    this.config.infos[_l.id].data = data.records[0].fields;
+    this.loaded = true;
+    this.sendSocketNotification("DATA", this.config.infos);
+  },
+
 
   processPluie: function(data, _l) {
     var _p = this.config.infos[_l.id];
