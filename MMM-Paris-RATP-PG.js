@@ -18,6 +18,7 @@ Module.register("MMM-Paris-RATP-PG",{
     autolib_api: 'https://opendata.paris.fr/explore/dataset/stations_et_espaces_autolib_de_la_metropole_parisienne/api/', ///add '?q=' mais pas d'info temps réel... pour l'instant
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v3/',
+    autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     pluieIconConverter: {
       "Pas de précipitations" : 'wi-day-cloudy',
