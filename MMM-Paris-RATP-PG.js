@@ -34,7 +34,10 @@ Module.register("MMM-Paris-RATP-PG",{
     autolibIconConverter: {
      "cars" : 'car',
      "parking" : 'map-marker',
-     "utilib" : 'wrench'
+     "utilib" : 'wrench',
+     "utilib-0.9" : 'cube',
+     "utilib-1.4" : 'cubes',
+     "charge" : 'bolt',
    },
    line_template: {
       updateInterval: 1 * 60 * 1000,
@@ -110,7 +113,7 @@ Module.register("MMM-Paris-RATP-PG",{
     var now = new Date();
     var wrapper = document.createElement("div");
     var lines = this.config.lines;
-    var i, j, l, d, n, firstLine, delta, lineColor;
+    var i, j, l, d, n, firstLine, delta, lineColor, cars;
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus, iconSize, nexts;
@@ -282,17 +285,37 @@ Module.register("MMM-Paris-RATP-PG",{
           if (lineColor) {
             secondCell.setAttribute('style', lineColor);
           }
+          autolib = d.data['cars_counter_bluecar'];
+          cars = autolib + d.data['cars_counter_utilib_1.4'] + d.data['cars_counter_utilib'];
+          l.empty = cars < 1;
           //secondCell.className = "aligncenter";
           secondCell.style.align = "center";
-          secondCell.innerHTML = d.data.cars
-            + '<i id="line-' + i + '-voitures" class="fa fa-' + this.config.autolibIconConverter['cars'] + '"></i>'
-            + d.data.slots
-            + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['parking'] + '"></i>'
-            + d.data['cars_counter_utilib_1.4']
-            + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['utilib'] + '"></i>';
+          secondCell.innerHTML = (l.utilib ? autolib : cars)
+            + '<i id="line-' + i + '-voitures" class="fa fa-' + this.config.autolibIconConverter['cars'] + '"></i>&nbsp';
+          if (l.utilib) {
+            secondCell.innerHTML +=
+              d.data['cars_counter_utilib_1.4']
+              + '<i id="line-' + i + '-utilib-1.4" class="fa fa-' + this.config.autolibIconConverter['utilib-1.4'] + '"></i>&nbsp'
+              + d.data['cars_counter_utilib']
+              + '<i id="line-' + i + '-utilib-0.9" class="fa fa-' + this.config.autolibIconConverter['utilib-0.9'] + '"></i>&nbsp';
+          }
+            secondCell.innerHTML +=
+              d.data.slots
+              + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['parking'] + '"></i>&nbsp'
+              + d.data['charge_slots']
+              + '<i id="line-' + i + '-charge" class="fa fa-' + this.config.autolibIconConverter['charge'] + '"></i>';
           row.appendChild(secondCell);
-          table.appendChild(row);
-          break;          
+          if (l.backup) {
+            for (j = 0; j < lines.length; j++) {
+              if ((lines[j].name === l.backup) && lines[j].empty) {
+                table.appendChild(row);
+                break;
+              }
+            }
+          } else {
+            table.appendChild(row);
+          }
+          break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
