@@ -18,6 +18,7 @@ Module.register("MMM-Paris-RATP-PG",{
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v3/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
+    velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_id=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     pluieIconConverter: {
       "Pas de précipitations" : 'wi-day-cloudy',
@@ -88,6 +89,9 @@ Module.register("MMM-Paris-RATP-PG",{
           break;
         case 'autolib':
           l.url = this.config.autolib_api + l.name;
+          break;
+        case 'velib':
+          l.url = this.config.velib_api + l.id;
           break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
@@ -266,6 +270,32 @@ Module.register("MMM-Paris-RATP-PG",{
           }
           row.appendChild(secondCell);
           table.appendChild(row);
+          break;
+        case "velib":
+          row = document.createElement("tr");
+          row.id = 'line-' + i;
+          firstCell = document.createElement("td");
+          firstCell.className = "align-right bright";
+          firstCell.innerHTML = firstCellHeader + (l.label || l.name);
+          if (lineColor) {
+            firstCell.setAttribute('style', lineColor);
+          }
+          if (l.firstCellColor) {
+            firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+          }
+          row.appendChild(firstCell);
+          secondCell = document.createElement("td");
+          secondCell.colSpan = 2;
+          if (lineColor) {
+            secondCell.setAttribute('style', lineColor);
+          }
+          secondCell.style.align = "center";
+          if (d.data['is_renting'] === 1) {
+            secondCell.innerHTML = d.data['numbikesavailable'] + '<i id="line-' + i + '-velib" class="fa fa-bicycle' + '"></i>&nbsp';
+            secondCell.innerHTML += d.data['numbikesavailable'] + '<i id="line-' + i + '-velibDock" class="fa fa-lock-open' + '"></i>&nbsp';
+          } else {
+            secondCell.innerHTML = '<i id="line-' + i + '-velib" class="fa fa-window-close' + '"></i>&nbsp';
+          }
           break;
         case "autolib":
           row = document.createElement("tr");

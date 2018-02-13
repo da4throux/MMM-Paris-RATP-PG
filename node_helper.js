@@ -65,6 +65,9 @@ module.exports = NodeHelper.create({
             case 'autolib':
               self.processAutolib(response.body, _l);
               break;
+            case 'velib':
+              self.processVelib(response.body, _l);
+              break;
             default:
               if (this.config.debug) {
                 console.log(' *** unknown request: ' + l.type);
@@ -99,6 +102,13 @@ module.exports = NodeHelper.create({
     this.sendSocketNotification("DATA", this.config.infos);
   },
 
+  processVelib: function (data, _l) {
+    var _p = this.config.infos[_l.id];
+    _p.lastUpdate = new Date();
+    _p.data = data.records[0].fields;
+    this.loaded = true;
+    this.sendSocketNotification("DATA", this.config.infos);
+  },
 
   processPluie: function(data, _l) {
     var _p = this.config.infos[_l.id];
