@@ -91,7 +91,7 @@ Module.register("MMM-Paris-RATP-PG",{
           l.url = this.config.autolib_api + l.name;
           break;
         case 'velib':
-          l.url = this.config.velib_api + l.id;
+          l.url = this.config.velib_api + l.stationId;
           break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
@@ -292,10 +292,12 @@ Module.register("MMM-Paris-RATP-PG",{
           secondCell.style.align = "center";
           if (d.data['is_renting'] === 1) {
             secondCell.innerHTML = d.data['numbikesavailable'] + '<i id="line-' + i + '-velib" class="fa fa-bicycle' + '"></i>&nbsp';
-            secondCell.innerHTML += d.data['numbikesavailable'] + '<i id="line-' + i + '-velibDock" class="fa fa-lock-open' + '"></i>&nbsp';
+            secondCell.innerHTML += d.data['numdocksavailable'] + '<i id="line-' + i + '-velibDock" class="fa fa-unlock' + '"></i>&nbsp';
           } else {
             secondCell.innerHTML = '<i id="line-' + i + '-velib" class="fa fa-window-close' + '"></i>&nbsp';
           }
+          row.appendChild(secondCell);
+          table.appendChild(row);
           break;
         case "autolib":
           row = document.createElement("tr");
