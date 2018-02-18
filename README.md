@@ -54,7 +54,7 @@ Three different kind of objects are in the configuration:
 ### Common in Transportation lines
 * maximumEntries: optional, int, default = 2, //if the APIs sends several results for the incoming transport how many should be displayed
 * converToWaitingTime: optional, boolean, default = true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
-* maxLeterrsForDestination: optional, int, default = 22, //will limit the length of the destination string
+* maxLettersForDestination: optional, int, default = 22, //will limit the length of the destination string
 * concatenateArrivals: optional, boolean, default = true, //if for a transport there is the same destination and several times, they will be displayed on one line
 ### autolib
 * type: mandatory: autolib
@@ -78,11 +78,12 @@ Three different kind of objects are in the configuration:
 * showUpdateAge: optional, boolean, default = true, //add a circled integer next to the line name showing the tenths digits of the number of seconds elapsed since update.
 * firstCellColor: optional, color name, // typically first column of the line (superseed the line color): https://dataratp2.opendatasoft.com/explore/dataset/indices-et-couleurs-de-lignes-du-reseau-ferre-ratp/ or wikipedia can give you insights
 * lineColor: optional, color name, //set the color of the line
+* maxLetters: optional, number, default = 70, will limit the string length for traffic and messages
 ## Global element
 * debug: false, //console.log more things to help debugging
 ## lineDefault
 * lineDefault contains properties that will be common to all lines, but can be superseed at the line level also: so any property from the line, can be set here also, but the following ones, make more sense here also:
-* conversion: object of key/ values to convert traffic message. Those message can be very long, and it might worth to convert them in a simpler text. by default:
+* conversion: object of key/ values to convert traffic message or destination. Those message can be very long (and limited through maxLetters also), and it might worth to convert them in a simpler text. by default:
   - conversion: {"Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'}
   - don't hesitate to add more when there's works on a specific line or others...
 * updateInterval: see above

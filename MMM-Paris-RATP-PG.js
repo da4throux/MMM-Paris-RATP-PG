@@ -45,6 +45,7 @@ Module.register("MMM-Paris-RATP-PG",{
       updateInterval: 1 * 60 * 1000,
       maximumEntries: 2, //if the APIs sends several results for the incoming transport how many should be displayed
       maxLettersForDestination: 22, //will limit the length of the destination string
+      maxLetters: 70, //will limit the length of other second column messages
       convertToWaitingTime: true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
       concatenateArrivals: true, //if for a transport there is the same destination and several times, they will be displayed on one line
       initialLoadDelay: 0, // start delay seconds
@@ -288,7 +289,7 @@ Module.register("MMM-Paris-RATP-PG",{
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.className = "align-left";
-          secondCell.innerHTML = d.status ? l.conversion[d.status.message] || d.status.message : 'N/A';
+          secondCell.innerHTML = d.status ? l.conversion[d.status.message] || d.status.message.substr(0, l.maxLetters) : 'N/A';
           secondCell.colSpan = 2;
           if (lineColor) {
               secondCell.setAttribute('style', lineColor);
@@ -317,13 +318,13 @@ Module.register("MMM-Paris-RATP-PG",{
               firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
             }
             row.appendChild(firstCell);
-            var busDestinationCell = document.createElement("td");
-            busDestinationCell.innerHTML = n.destination.substr(0, l.maxLettersForDestination);
-            busDestinationCell.className = "align-left";
+            var destinationCell = document.createElement("td");
+            destinationCell.innerHTML = l.conversion[n.destination] || n.destination.substr(0, l.maxLettersForDestination);
+            destinationCell.className = "align-left";
             if (lineColor) {
-              busDestinationCell.setAttribute('style', lineColor);
+              destinationCell.setAttribute('style', lineColor);
             }
-            row.appendChild(busDestinationCell);
+            row.appendChild(destinationCell);
             var depCell = document.createElement("td");
             depCell.className = "bright";
             if (l.convertToWaitingTime && /^\d{1,2}[:][0-5][0-9]$/.test(n.message)) {
@@ -341,9 +342,8 @@ Module.register("MMM-Paris-RATP-PG",{
               waitingTime = Math.floor(waitingTime / 1000 / 60);
               depCell.innerHTML = waitingTime + ' mn';
             } else {
-              depCell.innerHTML = n.message;
+              depCell.innerHTML = l.conversion[n.message] || n.message.substr(0, l.maxLetters);
             }
-            depCell.innerHTML = depCell.innerHTML.substr(0, l.maxLettersForTime);
             if (lineColor) {
               depCell.setAttribute('style', lineColor);
             }
