@@ -1,6 +1,6 @@
 # MMM-Paris-RATP-PG
 
-MagicMirror MichMich module to display transportation information for Paris (bus, metro, tramway, RER, autolib) and rain risk in the coming hour for a configured list of stations/ destinations.
+MagicMirror MichMich module to display transportation information for Paris (bus, metro, tramway, RER, autolib & velib) and rain risk in the coming hour for a configured list of stations/ destinations.
 
 Forked from MMM-HH-LocalTransport see more detailed information on georg90 [blog](https://lane6.de).
 
@@ -9,16 +9,17 @@ A module to display:
 * the different buses, metros, rers & tramways, in order to avoid waiting too much for them when leaving home.
 * general traffic information for lines of metros, rers & tramways
 * available autolib, utilib, and station spaces, charging slots
+* available velib (bike and dock - no info on electrical bike yet, accuracy is not great yet)
 * rain in the coming hour (as per Meteo France)
 
 # Screenshot
-![screenshot](https://github.com/da4throux/MMM-Paris-RATP-PG/blob/master/MMM-Paris-RATP-PG%202.2.png)
+![screenshot](https://github.com/da4throux/MMM-Paris-RATP-PG/blob/master/MMM-Paris-RATP-PG%202.3.png)
 
 # API
 
 It is based on the open REST API from Pierre Grimaud https://github.com/pgrimaud/horaires-ratp-api, which does not require any configuration / registration.
 It uses a non documented API from Meteo meteofrance for the rain within an hour prediction
-It uses the Open Data from Paris City for Autolib
+It uses the Open Data from Paris City for Autolib, and Velib
 
 # Install
 
@@ -60,6 +61,11 @@ Three different kind of objects are in the configuration:
 * name: mandatory: public name of the station (check  https://opendata.paris.fr/explore/dataset/autolib-disponibilite-temps-reel/ )
 * utilib: optional: boolean: if false: the utilib are aggregated with the bluecar, if true: all three type of cars are detailed
 * backup: optional: public name of the station to backup. If that station (set in backup) is empty (no cars - utilib or not), then only this line is displayed. A use case would be: display this station status only if that other station (nearest to me) is empty. The station (set in backup) should be in the lines before (else there might be a delay in displaying the line).
+### velib
+* type: mandatory: velib
+* stationId: mandatory: digits: please check the ID from OpenDataParis: https://opendata.paris.fr/explore/dataset/velib-disponibilite-en-temps-reel/ (different from the velib ID as of this commit). For example: Assas - Luxembourg is shown as "13 191 324", and therefore make it a number: 13191324
+* keepVelibHistory: optional: boolean: if true, keeps locally in the browser a day of data regarding the station (to be used if velibGraph is set to true later on)
+* velibGraph: optional: boolean: shows a graph of velib count for the last day (give an idea of the trend)
 ### Pluie
 * type: mandatory: pluie
 * place: mandatory: integer, example: 751140, take the id from the object returned by: http://www.meteofrance.com/mf3-rpc-portlet/rest/lieu/facet/pluie/search/input=75014 (change 75014 by your postal code)
@@ -67,7 +73,7 @@ Three different kind of objects are in the configuration:
 * iconSize: optional, example: 0.70, //set the em for the weather icon (each icon is 5 minutes: i.e. there's 12 icons for an hour)
 ### common in all lines
 * common means: not shared value, but meaningful for all the lines
-* label: Optional: to rename the object differently if needed
+* label: optional: to rename the object differently if needed
 * updateInterval: optional, int, default: 60000, time in ms between pulling request for new times (update request)
 * showUpdateAge: optional, boolean, default = true, //add a circled integer next to the line name showing the tenths digits of the number of seconds elapsed since update.
 * firstCellColor: optional, color name, // typically first column of the line (superseed the line color): https://dataratp2.opendatasoft.com/explore/dataset/indices-et-couleurs-de-lignes-du-reseau-ferre-ratp/ or wikipedia can give you insights
@@ -86,25 +92,27 @@ Config Example:
 config: {
 	debug: false,
 	lineDefault: {
-		hideTraffic: [
-            "le trafic est interrompu entre Aulnay et Aeroport Charles de Gaulle 2 TGV de 23:00 à fin de service jusqu'au 16/03/18. Bus de remplacement à dispo. (travaux de modernisation)",
+	  hideTraffic: [
+	    "le trafic est interrompu entre Aulnay et Aeroport Charles de Gaulle 2 TGV de 23:00 à fin de service jusqu'au 16/03/18. Bus de remplacement à dispo. (travaux de modernisation)",
             "Trafic normal sur l'ensemble de la ligne.",
             "le trafic est interrompu entre Nanterre-Prefecture et Cergy/ Poissy de 21:30 à fin de service jusqu'au 16/02/18. Bus de remplacement à dispo. (travaux)",
-		],
-		conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'},
-		updateInterval: 1 * 2 * 60 * 1000,
-  },
-  lines: [
-		{type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#0055c8'},
-		{type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#dc9600'},
-		{type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'R', firstCellColor: '#dc9600', lineColor: 'Brown'},
-		{type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', firstCellColor: '#7BA3DC'},
-		{type: 'traffic', line: ['rers', 'B'], firstCellColor: 'Blue', lineColor: 'green'},
-		{type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', firstCellColor: '#6ECA97'},
-		{type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Paris', iconSize: 0.70},
-		{type: 'autolib', name: 'Paris/Henri%20Barbusse/66', label: 'Barbusse', lineColor: 'green'},
-		{type: 'autolib', name: 'Paris/Michelet/6', label: 'Michelet', utilib: true, backup: 'Paris/Henri%20Barbusse/66'},
-	],
+	  ],
+	  conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic normal'},
+	  updateInterval: 1 * 2 * 60 * 1000,
+	},
+	lines: [
+	  {type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#0055c8'},
+	  {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#dc9600'},
+	  {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'R', firstCellColor: '#dc9600', lineColor: 'Brown'},
+	  {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', firstCellColor: '#7BA3DC'},
+	  {type: 'traffic', line: ['rers', 'B'], firstCellColor: 'Blue', lineColor: 'green'},
+	  {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', firstCellColor: '#6ECA97'},
+	  {type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Paris', iconSize: 0.70},
+	  {type: 'autolib', name: 'Paris/Henri%20Barbusse/66', label: 'Barbusse', lineColor: 'green'},
+	  {type: 'autolib', name: 'Paris/Michelet/6', label: 'Michelet', utilib: true, backup: 'Paris/Henri%20Barbusse/66'},
+	  {type: 'velib', stationId: 7295, label: 'Montparnasse', velibGraph : false, keepVelibHistory: true},
+	  {type: 'velib', stationId: 13191324, label: 'Assas', velibGraph: true, keepVelibHistory: true},
+        ],
 },
 ```
-# v2.2
+# v2.3
