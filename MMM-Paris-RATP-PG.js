@@ -77,7 +77,7 @@ Module.register("MMM-Paris-RATP-PG",{
       oldHistory.shift();
     }
     _l.velibHistory = [];
-    if (oldHistory.length > 0) {
+    if (oldHistory.length > 0 && oldHistory[0].data) {
       oldHistory[0].data.update = oldHistory[0].data.update ? oldHistory[0].data.update : oldHistory[0].lastUpdate;
       _l.velibHistory.push(oldHistory[0]);
       velib = oldHistory[0].data.numbikesavailable;
@@ -417,7 +417,7 @@ Module.register("MMM-Paris-RATP-PG",{
             secondCell.setAttribute('style', lineColor);
           }
           secondCell.style.align = "center";
-          if (d.data['is_renting'] === 1) {
+          if (d.data && d.data['is_renting'] === 1) {
             secondCell.innerHTML = d.data['numbikesavailable'] + '<i id="line-' + i + '-velib" class="fa fa-bicycle' + '"></i>&nbsp';
             secondCell.innerHTML += d.data['numdocksavailable'] + '<i id="line-' + i + '-velibDock" class="fa fa-unlock' + '"></i>&nbsp';
           } else {
