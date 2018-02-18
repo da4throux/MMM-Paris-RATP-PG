@@ -403,7 +403,7 @@ Module.register("MMM-Paris-RATP-PG",{
           row.id = 'line-' + i;
           firstCell = document.createElement("td");
           firstCell.className = "align-right bright";
-          firstCell.innerHTML = firstCellHeader + (l.label || l.name);
+          firstCell.innerHTML = firstCellHeader + (l.label || l.stationId);
           if (lineColor) {
             firstCell.setAttribute('style', lineColor);
           }
