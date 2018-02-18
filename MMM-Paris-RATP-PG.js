@@ -18,6 +18,7 @@ Module.register("MMM-Paris-RATP-PG",{
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v3/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
+    velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_id=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     pluieIconConverter: {
       "Pas de précipitations" : 'wi-day-cloudy',
@@ -38,6 +39,7 @@ Module.register("MMM-Paris-RATP-PG",{
      "utilib-0.9" : 'cube',
      "utilib-1.4" : 'cubes',
      "charge" : 'bolt',
+     "closed" : 'window-close',
    },
    line_template: {
       updateInterval: 1 * 60 * 1000,
@@ -48,6 +50,7 @@ Module.register("MMM-Paris-RATP-PG",{
       initialLoadDelay: 0, // start delay seconds
       showUpdateAge: true,
       pluieAsText: false,
+      velibTrendDay : true,
       conversion: {},
       hideTraffic: [],
     },
@@ -59,9 +62,49 @@ Module.register("MMM-Paris-RATP-PG",{
     return ["MMM-Paris-RATP-Transport.css", "font-awesome.css", "weather-icons.css"];
   },
 
+  cleanStoreVelibHistory: function(_l, _first) {
+    var now = new Date();
+    var j, velib, dock, maxVelibArchiveAge, velibArchiveCleaned, oldHistory;
+    if (_first) {
+      //récupération de l'historique si existant et cleaning
+      _l.velibHistory = localStorage['velib-' + _l.stationId] ? JSON.parse(localStorage['velib-' + _l.stationId]) : [];
+    }
+    velibArchiveCleaned = 0;
+    maxVelibArchiveAge = _l.velibTrendDay ? 24 * 60 * 60 : _l.velibTrendTimeScale || 60 * 60;
+    oldHistory = _l.velibHistory;
+    //remove old lines, but keep at least one out of frame if any
+    while ((oldHistory.length > 1) && ((((now - new Date(oldHistory[1].lastUpdate)) / 1000) > maxVelibArchiveAge) || !oldHistory[1].lastUpdate) ) {
+      oldHistory.shift();
+    }
+    _l.velibHistory = [];
+    if (oldHistory.length > 0) {
+      oldHistory[0].data.update = oldHistory[0].data.update ? oldHistory[0].data.update : oldHistory[0].lastUpdate;
+      _l.velibHistory.push(oldHistory[0]);
+      velib = oldHistory[0].data.numbikesavailable;
+      dock = oldHistory[0].data.numdocksavailable;
+      for (j = 1; j < oldHistory.length; j++) {
+        if (velib !== oldHistory[j].data.numbikesavailable || oldHistory[j].data.numdocksavailable !== dock ) {
+          oldHistory[j].data.update = oldHistory[j].data.update ? oldHistory[j].data.update : oldHistory[j].lastUpdate;
+          velib = oldHistory[j].data.numbikesavailable;
+          dock = oldHistory[j].data.numdocksavailable;
+          _l.velibHistory.push(oldHistory[j]);
+        } else {
+          _l.velibHistory[_l.velibHistory.length - 1].lastUpdate = oldHistory[j].lastUpdate;
+        }
+      }
+    }
+    localStorage['velib-' + _l.stationId] = JSON.stringify(_l.velibHistory);
+    if (this.config.debug && _first) {
+      console.log ('First load size of velib History for ' + _l.stationId + ' is: ' + _l.velibHistory.length);
+      console.log (velibArchiveCleaned + ' elements removed');
+      console.log (_l.velibHistory);
+    }
+    return true;
+ },
+
   // Define start sequence.
   start: function() {
-    var l;
+    var l, i;
     Log.info("Starting module: " + this.name);
     this.config.infos = [];
     if (!this.config.lines) {
@@ -89,6 +132,12 @@ Module.register("MMM-Paris-RATP-PG",{
         case 'autolib':
           l.url = this.config.autolib_api + l.name;
           break;
+        case 'velib':
+          l.url = this.config.velib_api + l.stationId;
+          if (l.velibGraph || l.keepVelibHistory) {
+            this.cleanStoreVelibHistory(l, true);
+          }
+          break;
         default:
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
@@ -108,12 +157,90 @@ Module.register("MMM-Paris-RATP-PG",{
     return header;
   },
 
+  buildVelibGraph: function(l, d) {
+    var dataIndex, dataTimeStamp, now = new Date();
+    var rowTrend = document.createElement("tr");
+    var cellTrend = document.createElement("td");
+    var trendGraph = document.createElement('canvas');
+    trendGraph.className = "velibTrendGraph";
+    trendGraph.width  = l.velibTrendWidth || 400;
+    trendGraph.height = l.velibTrendHeight || 100;
+    trendGraph.timeScale = l.velibTrendDay ? 24 * 60 * 60 : l.velibTrendTimeScale || 60 * 60; // in nb of seconds, the previous hour
+    l.velibTrendZoom = l.velibTrendZoom || 30 * 60; //default zoom windows is 30 minutes for velibTrendDay
+    var ctx = trendGraph.getContext('2d');
+    var currentStation = l.stationId;
+    var previousX = trendGraph.width;
+    var inTime = false;
+    for (dataIndex = l.velibHistory.length - 1; dataIndex >= 0 ; dataIndex--) { //start from most recent
+      dataTimeStamp = (now - new Date(l.velibHistory[dataIndex].data.update)) / 1000; // time of the event in seconds ago
+      if (dataTimeStamp < trendGraph.timeScale || inTime) {
+        inTime = dataTimeStamp < trendGraph.timeScale; // compute the last one outside of the time window
+        if (dataTimeStamp - trendGraph.timeScale < 10 * 60) { //takes it only if it is within 10 minutes of the closing windows
+          dataTimeStamp = Math.min(dataTimeStamp, trendGraph.timeScale); //to be sure it does not exit the graph
+          var x, y;
+          if (l.velibTrendDay) {
+            if ( dataTimeStamp  < l.velibTrendZoom ) { //1st third in zoom mode
+              x = (1 - dataTimeStamp / l.velibTrendZoom / 3) * trendGraph.width;
+            } else if (dataTimeStamp < trendGraph.timeScale - l.velibTrendZoom) { //middle in compressed mode
+              x = (2/3 - (dataTimeStamp - l.velibTrendZoom) / (trendGraph.timeScale - 2 * l.velibTrendZoom)/ 3) * trendGraph.width;
+            } else {
+              x = (1 / 3 - (dataTimeStamp - trendGraph.timeScale + l.velibTrendZoom)/ l.velibTrendZoom / 3) * trendGraph.width;
+            }
+          } else {
+            x = (1 - dataTimeStamp / trendGraph.timeScale) * trendGraph.width;
+          }
+          y = l.velibHistory[dataIndex].data['numbikesavailable'] / l.velibHistory[dataIndex].data['capacity'] * trendGraph.height * 4 / 5;
+          ctx.fillStyle = 'white';
+          ctx.fillRect(x, trendGraph.height - y - 1, previousX - x, Math.max(y, 1)); //a thin line even if it's zero
+          previousX = x;
+        }
+      }
+    }
+//              var bodyStyle = window.getComputedStyle(document.getElementsByTagName('body')[0], null);
+//              ctx.font = bodyStyle.getPropertyValue(('font-size')) + ' ' + ctx.font.split(' ').slice(-1)[0]; //00px sans-serif
+    ctx.font = Math.round(trendGraph.height / 5) + 'px ' + ctx.font.split(' ').slice(-1)[0];
+    ctx.fillStyle = 'grey';
+    ctx.textAlign = 'center';
+    ctx.fillText(l.label || l.name, trendGraph.width / 2, Math.round(trendGraph.height / 5));
+    ctx.textAlign = 'left';
+    ctx.fillText(d.data['numbikesavailable'], 10, trendGraph.height - 10);
+    ctx.fillText(d.data['numdocksavailable'], 10, Math.round(trendGraph.height / 5) + 10);
+    if (l.velibTrendDay) {
+      ctx.font = Math.round(trendGraph.height / 10) + 'px ' + ctx.font.split(' ').slice(-1)[0];
+      ctx.fillText(Math.round(l.velibTrendZoom / 60) + 'mn', trendGraph.width * 5 / 6, trendGraph.height / 2);
+      ctx.fillText(Math.round(l.velibTrendZoom / 60) + 'mn', trendGraph.width / 6, trendGraph.height / 2);
+      ctx.strokeStyle = 'grey';
+      ctx.setLineDash([5, 15]);
+      ctx.beginPath();
+      ctx.moveTo(2/3 * trendGraph.width, 0);
+      ctx.lineTo(2/3 * trendGraph.width, 100);
+      ctx.stroke();
+      ctx.moveTo(trendGraph.width / 3, 0);
+      ctx.lineTo(trendGraph.width / 3, 100);
+      ctx.stroke();
+      var hourMark = new Date(); var alpha;
+      hourMark.setMinutes(0); hourMark.setSeconds(0);
+      alpha = (hourMark - now + 24 * 60 * 60 * 1000 - l.velibTrendZoom * 1000) / (24 * 60 * 60 * 1000 - 2 * l.velibTrendZoom * 1000);
+      alpha = (hourMark - now + l.velibTrendZoom * 1000) / (24 * 60 * 60 * 1000) * trendGraph.width;
+      for (var h = 0; h < 24; h = h + 2) {
+        ctx.fillStyle = 'red';
+        ctx.textAlign = 'center';
+        ctx.font = Math.round(trendGraph.height / 12) + 'px';
+        ctx.fillText((hourMark.getHours() + 24 - h) % 24, (2 - h / 24) * trendGraph.width / 3 + alpha, h % 12 * trendGraph.height / 12 / 3 + trendGraph.height / 3);
+      }
+    }
+    cellTrend.colSpan = '3'; //so that it takes the whole row
+    cellTrend.appendChild(trendGraph);
+    rowTrend.appendChild(cellTrend);
+    return (rowTrend);
+  },
+
   // Override dom generator.
   getDom: function() {
     var now = new Date();
     var wrapper = document.createElement("div");
     var lines = this.config.lines;
-    var i, j, l, d, n, firstLine, delta, lineColor, cars;
+    var i, j, l, d, n, firstLine, delta, lineColor, cars, currentHistory;
     var table = document.createElement("table");
     var stopIndex, firstCell, secondCell;
     var previousRow, previousDestination, previousMessage, row, comingBus, iconSize, nexts;
@@ -267,6 +394,41 @@ Module.register("MMM-Paris-RATP-PG",{
           row.appendChild(secondCell);
           table.appendChild(row);
           break;
+        case "velib":
+          if (l.keepVelibHistory || l.velibGraph) {
+            l.velibHistory.push(d);
+            this.cleanStoreVelibHistory(l);
+          }
+          row = document.createElement("tr");
+          row.id = 'line-' + i;
+          firstCell = document.createElement("td");
+          firstCell.className = "align-right bright";
+          firstCell.innerHTML = firstCellHeader + (l.label || l.name);
+          if (lineColor) {
+            firstCell.setAttribute('style', lineColor);
+          }
+          if (l.firstCellColor) {
+            firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+          }
+          row.appendChild(firstCell);
+          secondCell = document.createElement("td");
+          secondCell.colSpan = 2;
+          if (lineColor) {
+            secondCell.setAttribute('style', lineColor);
+          }
+          secondCell.style.align = "center";
+          if (d.data['is_renting'] === 1) {
+            secondCell.innerHTML = d.data['numbikesavailable'] + '<i id="line-' + i + '-velib" class="fa fa-bicycle' + '"></i>&nbsp';
+            secondCell.innerHTML += d.data['numdocksavailable'] + '<i id="line-' + i + '-velibDock" class="fa fa-unlock' + '"></i>&nbsp';
+          } else {
+            secondCell.innerHTML = '<i id="line-' + i + '-velib" class="fa fa-window-close' + '"></i>&nbsp';
+          }
+          row.appendChild(secondCell);
+          table.appendChild(row);
+          if (l.velibGraph) {
+            table.appendChild(this.buildVelibGraph(l, d));
+          }
+          break;
         case "autolib":
           row = document.createElement("tr");
           row.id = 'line-' + i;
@@ -299,11 +461,14 @@ Module.register("MMM-Paris-RATP-PG",{
               + d.data['cars_counter_utilib']
               + '<i id="line-' + i + '-utilib-0.9" class="fa fa-' + this.config.autolibIconConverter['utilib-0.9'] + '"></i>&nbsp';
           }
-            secondCell.innerHTML +=
+          secondCell.innerHTML +=
               d.data.slots
               + '<i id="line-' + i + '-parking" class="fa fa-' + this.config.autolibIconConverter['parking'] + '"></i>&nbsp'
               + d.data['charge_slots']
               + '<i id="line-' + i + '-charge" class="fa fa-' + this.config.autolibIconConverter['charge'] + '"></i>';
+          if (d.data.status === 'closed') {
+            secondCell.innerHTML = '<i id="line-' + i + '-autolib" class="fa fa-' + this.config.autolibIconConverter['closed'] + '"></i>';
+          }
           row.appendChild(secondCell);
           if (l.backup) {
             for (j = 0; j < lines.length; j++) {
@@ -324,8 +489,6 @@ Module.register("MMM-Paris-RATP-PG",{
   },
 
   socketNotificationReceived: function(notification, payload) {
-    var maxVelibArchiveAge = this.config.velibTrendDay ? 24 * 60 * 60 : this.config.velibTrendTimeScale || 60 * 60;
-    var velibArchiveCleaned = 0;
     var now = new Date();
     this.caller = notification;
     switch (notification) {
