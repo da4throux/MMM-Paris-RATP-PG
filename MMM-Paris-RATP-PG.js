@@ -109,12 +109,12 @@ Module.register("MMM-Paris-RATP-PG",{
     Log.info("Starting module: " + this.name);
     this.config.infos = [];
     if (!this.config.lines) {
-      this.config.lines = [];
+      this.config.lines = this.config.busStations || []; //v1 legacy support for migration
     }
     for (i=0; i < this.config.lines.length; i++) {
       this.config.infos[i]={};
       l = Object.assign(JSON.parse(JSON.stringify(this.config.line_template)),
-        JSON.parse(JSON.stringify(this.config.lineDefault)),
+        JSON.parse(JSON.stringify(this.config.lineDefault || {})),
         JSON.parse(JSON.stringify(this.config.lines[i])));
       l.id = i;
       switch (l.type) {
@@ -258,6 +258,15 @@ Module.register("MMM-Paris-RATP-PG",{
     } else {
       wrapper.className = "small";
       wrapper.innerHTML = "Configuration now requires a 'lines' element.<br />Check github da4throux/MMM-Paris-RATP-PG<br />for more information";
+    }
+    if (this.config.busStations) {
+      row = document.createElement("tr");
+      firstCell = document.createElement("td");
+      firstCell.innerHTML = "Configuration now requires to rename your 'busStations' element in 'lines'.<br />Check github da4throux/MMM-Paris-RATP-PG<br />for more information";
+      firstCell.className = "dimmed light small";
+      firstCell.colSpan = 3;
+      row.appendChild(firstCell);
+      table.appendChild(row);
     }
     for (i = 0; i < lines.length; i++) {
       l = lines[i]; // line config
