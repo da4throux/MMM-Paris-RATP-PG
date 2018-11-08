@@ -41,7 +41,7 @@ Module.register( "MMM-Toulouse-Transports", {
         showLastUpdateTime: false, //display the time when the last pulled occured (taste & color...)
         oldUpdateOpacity: 0.5, //when a displayed time age has reached a threshold their display turns darker (i.e. less reliable)
         oldThreshold: 0.1, //if (1+x) of the updateInterval has passed since the last refresh... then the oldUpdateOpacity is applied
-        retryDelay: 10 * 1000, // delay before data update retrys (ms)
+        retryDelay: 1000,//10 * 1000, // delay before data update retrys (ms)
         debug: false
     },
 
@@ -59,8 +59,17 @@ Module.register( "MMM-Toulouse-Transports", {
         this.sendSocketNotification( 'UPDATE_GLOBAL_TISSEO_DATA', null);
         
         this.busScheduleData = [];
+        this.currentUpdateInterval = this.config.updateInterval
 
         this.lastUpdate = new Date();
+        
+        // test to avoid first request delayed of update interval
+        //this.log(TRACE, "start - lastUpdate " + this.lastUpdate);
+        //this.lastUpdate.setHours(this.lastUpdate.getHours() - 1)
+        //this.log(TRACE, "start - lastUpdate minus 01h00 " + this.lastUpdate);
+        //this.config.lastUpdate = this.lastUpdate
+        // end
+        
         this.loaded = false;
         this.updateTimer = null;
 
@@ -77,7 +86,9 @@ Module.register( "MMM-Toulouse-Transports", {
         //Log.info("Start getHeader");
         var header = this.data.header;
         if ( this.config.showSecondsToNextUpdate ) {
-            var timeDifference = Math.round( ( this.config.updateInterval - new Date( ) + Date.parse( this.config.lastUpdate ) ) / 1000 );
+            //var timeDifference = Math.round( ( this.config.updateInterval - new Date( ) + Date.parse( this.config.lastUpdate ) ) / 1000 );
+            var timeDifference = Math.round( ( this.currentUpdateInterval - new Date( ) + Date.parse( this.config.lastUpdate ) ) / 1000 );
+            
             if ( timeDifference > 0 ) {
                 header += ', next update in ' + timeDifference + 's';
             } else {
@@ -271,12 +282,13 @@ Module.register( "MMM-Toulouse-Transports", {
     socketNotificationReceived: function ( notification, payload ) {
         Log.info("socketNotificationReceived - Module received notification: " + notification);
         switch ( notification ) {
-            case "JOURNEYS":
+            case "JOURNEYS": 
                 break;
             case "BUS_SCHEDULES":
                 this.busScheduleData = payload.data;
                 this.lastUpdate = payload.lastUpdate;
                 this.loaded = payload.loaded;
+                this.currentUpdateInterval = payload.currentUpdateInterval       
                 //Log.info("socketNotificationReceived - bus schedule data received is: " + this.busScheduleData);
                 //Log.info("socketNotificationReceived - bus schedule data received is: " + JSON.stringify(this.busScheduleData));
                 this.updateDom( );
