@@ -55,6 +55,13 @@ module.exports = NodeHelper.create( {
         // full list of required bus schedule data
         this.busScheduleData = {};
         this.busScheduleData.lastUpdate = new Date( );
+        
+		// test to avoid first request delayed of update interval
+		this.log(TRACE, "start - busScheduleData.lastUpdate " + this.busScheduleData.lastUpdate);
+		this.busScheduleData.lastUpdate.setHours(this.busScheduleData.lastUpdate.getHours() - 1)
+		this.log(TRACE, "start - busScheduleData.lastUpdate minus 01h00 " + this.busScheduleData.lastUpdate);
+		//end
+        
         this.busScheduleData.loaded = false;
         this.busScheduleData.data = [];
 
@@ -66,7 +73,11 @@ module.exports = NodeHelper.create( {
             case WARNING:
             case INFO:
             case ERROR:
+				console.log("");
+				console.log(level + " MMM-Toulouse-Transports - ******************* ERROR *******************");
                 console.log(level + " MMM-Toulouse-Transports - " + string);
+                console.log("");
+                console.log("");
                 break;
             case DEBUG:
             case TRACE:
@@ -104,7 +115,12 @@ module.exports = NodeHelper.create( {
             this.log(TRACE, ' *** call Update Lines list');
             this.updateAllTisseoData();
             this.started = true;
-            this.log(TRACE, "socketNotificationReceived - schedule update of bus data (call scheduleBusScheduleUpdate())");
+            
+            // test for display at startup
+            this.updateBusScheduleTimetable(0);
+            // test for immediate display
+            
+			this.log(TRACE, "socketNotificationReceived - schedule update of bus data (call scheduleBusScheduleUpdate())");
             this.scheduleBusScheduleUpdate(this.config.initialLoadDelay);
         };
         if (notification === 'UPDATE_BUS_SCHEDULES' && this.started == true) {
@@ -129,16 +145,23 @@ module.exports = NodeHelper.create( {
                 .end( function ( response ) {
                     //self.log(DEBUG, "updateLineInfo - response"+ JSON.stringify(response));
                     if ( response && response.statusCode >= 200 && response.statusCode < 300 && response.body ) {
-                        //self.log(DEBUG, "updateLineInfo - REQUEST_END - the received Tisseo Lines: " + JSON.stringify(response.body));
-                        self.log(DEBUG, "updateLineInfo - REQUEST_END - found the lineId=" + response.body.lines.line[0].id + " for lineNumber=" + lineShortName);
-                        self.neededTisseoLines.push( {
-                            lineNumber: lineShortName,
-                            lineId: response.body.lines.line[0].id,
-                            lineData: response.body
-                        });
-                        // do callback recursion ...
-                        self.updateLineInfo(nextIndex);
-                        self.updateStopInfo(self.config.stopSchedules[index].stopCode, response.body.lines.line[0].id);
+                        self.log(DEBUG, "updateLineInfo - REQUEST_END - the received Tisseo Lines: " + JSON.stringify(response.body));
+                        if(Object.keys(response.body.lines.line).length > 0) {
+							self.log(DEBUG, "updateLineInfo - REQUEST_END - found the lineId=" + response.body.lines.line[0].id + " for lineNumber=" + lineShortName);
+							self.neededTisseoLines.push( {
+								lineNumber: lineShortName,
+								lineId: response.body.lines.line[0].id,
+								lineData: response.body
+							});
+							self.updateStopInfo(self.config.stopSchedules[index].stopCode, response.body.lines.line[0].id);
+						}
+						else {
+							self.log(ERROR, "updateLineInfo - REQUEST_END - Nothing found for lineNumber=" + lineShortName);
+							
+						}
+						// do callback recursion ...
+						self.updateLineInfo(nextIndex);
+
                     } else {
                         if ( response ) {
                             self.log(DEBUG, 'updateLineInfo - REQUEST_END - *** partial response received - HTTP return code ='+response.statusCode);
@@ -223,11 +246,12 @@ module.exports = NodeHelper.create( {
     },
 
     scheduleBusScheduleUpdate: function ( delay ) {
-        this.log(TRACE, "scheduleBusScheduleUpdate - start");
+        this.log(TRACE, "scheduleBusScheduleUpdate - start - asked delay: " + delay);
         var nextLoad = this.config.updateInterval;
         if ( typeof delay !== "undefined" && delay >= 0 ) {
             nextLoad = delay;
         }
+        this.log(TRACE, "scheduleBusScheduleUpdate - effecive next load is programmed in " + nextLoad);
         var self = this;
         clearTimeout( this.updateBusScheduleTimer );
         this.updateBusScheduleTimer = setTimeout( function ( ) {
@@ -260,12 +284,21 @@ module.exports = NodeHelper.create( {
                     }
                 }
                 if ( retry ) {
-                    self.scheduleJourneysUpdate( ( self.loaded ) ? -1 : this.config.retryDelay );
+                    self.scheduleJourneysUpdate( this.config.retryDelay );
                 }
             } );
         //}
         this.log(TRACE, "updateJourneysTimetable - end");
     },
+    
+    
+    isTisseoDataFullyLoaded :  function() {
+		return (
+		(this.uniqueStops.length == this.neededTisseoStops.length)
+		&&
+		(this.uniqueLines.length == this.neededTisseoLines.length)
+		);
+	},
     
     /*
      *
@@ -289,8 +322,7 @@ module.exports = NodeHelper.create( {
         //this.log(TRACE, "updateBusScheduleTimetable - unique stops size: "+ this.uniqueStops.length);
         //this.log(TRACE, "updateBusScheduleTimetable - grabbed lines size: "+ this.neededTisseoLines.length);
         //this.log(TRACE, "updateBusScheduleTimetable - grabbed stops size: "+ this.neededTisseoStops.length);
-        if ( this.uniqueStops.length == this.neededTisseoStops.length &&
-             this.uniqueLines.length == this.neededTisseoLines.length ) {
+        if ( self.isTisseoDataFullyLoaded() ) {
             // we have all stops and lines needed to work
             self.log(DEBUG, "updateBusScheduleTimetable -  all relevant Tisseo Data is present");
             if(index < this.config.stopSchedules.length) {
@@ -336,7 +368,7 @@ module.exports = NodeHelper.create( {
                                 }
                             }
                             if ( retry ) {
-                                self.scheduleBusScheduleUpdate( ( self.loaded ) ? -1 : this.config.retryDelay );
+                                self.scheduleBusScheduleUpdate( this.config.retryDelay );
                             }
                         } );
                 } // end if resultLine + resultStop
@@ -345,19 +377,22 @@ module.exports = NodeHelper.create( {
                     this.log(DEBUG, "updateBusScheduleTimetable - return data for bus line " + resultLine);
                     this.log(DEBUG, "updateBusScheduleTimetable - return data for bus stop " + resultStop);
                 };// end else esultLine + resultStop
-            } // end if full tisseo data is present
+            } // bad index
             else {
                 self.log(DEBUG, "updateBusScheduleTimetable - end of required data reached (" + index+"). Re-schedule update.");
-                self.processBusScheduleData();
-                self.scheduleBusScheduleUpdate( ( self.loaded ) ? -1 : this.config.retryDelay );
+                self.processBusScheduleData(this.config.updateInterval);
+                self.scheduleBusScheduleUpdate( this.config.updateInterval);
             }; // end else full tisseo data is present
         } // end if
         else {
             self.log(DEBUG, "updateBusScheduleTimetable - not all relevant Tisseo Data is present ==> reschedule");
             self.log(DEBUG, "updateBusScheduleTimetable - self.loaded="+self.loaded);
             self.log(DEBUG, "updateBusScheduleTimetable - this.config.retryDelay="+this.config.retryDelay);
+            // update delay info
+            self.processBusScheduleDataPending(this.config.retryDelay);
+            
             // reschedule
-            self.scheduleBusScheduleUpdate( ( self.loaded ) ? -1 : this.config.retryDelay );
+            self.scheduleBusScheduleUpdate( this.config.retryDelay );
         };
         this.log(TRACE, "updateBusScheduleTimetable - end");
     },
@@ -413,11 +448,12 @@ module.exports = NodeHelper.create( {
     },
 
     /* send bus schedule data to module DOM management*/
-    processBusScheduleData: function () {
+    processBusScheduleData: function (updateInterval) {
         this.log(TRACE, "processBusScheduleData - start");
         this.log(DEBUG, "processBusScheduleData - sending the data to MM module. Data: ");
         this.busScheduleData.lastUpdate = new Date( );
         this.busScheduleData.loaded = true;
+        this.busScheduleData.currentUpdateInterval = updateInterval
         this.log(DEBUG, "processBusScheduleData - " + JSON.stringify(this.busScheduleData));
         this.sendSocketNotification( "BUS_SCHEDULES", this.busScheduleData );
         // reset data
@@ -426,5 +462,26 @@ module.exports = NodeHelper.create( {
         this.busScheduleData.loaded = false;
         this.busScheduleData.data = [];
         this.log(TRACE, "processBusScheduleData - end");
+    },
+    
+    
+    /* send bus schedule data to module DOM management*/
+    processBusScheduleDataPending: function (updateInterval) {
+        this.log(TRACE, "processBusScheduleDataPending - start");
+        this.log(DEBUG, "processBusScheduleDataPending - sending the data to MM module. Data: ");
+        
+        this.busScheduleData = {};
+        this.busScheduleData.lastUpdate = new Date( );
+        this.busScheduleData.loaded = false;
+        this.busScheduleData.currentUpdateInterval = updateInterval
+        this.log(DEBUG, "processBusScheduleDataPending - " + JSON.stringify(this.busScheduleData));
+        this.sendSocketNotification( "BUS_SCHEDULES", this.busScheduleData );
+        
+        // reset data
+        
+        this.busScheduleData.lastUpdate = new Date( );
+        this.busScheduleData.loaded = false;
+        this.busScheduleData.data = [];
+        this.log(TRACE, "processBusScheduleDataPending - end");
     }
 } );
