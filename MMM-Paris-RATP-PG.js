@@ -120,7 +120,7 @@ Module.register("MMM-Paris-RATP-PG",{
       l.id = i;
       switch (l.type) {
         case 'tramways':
-        case 'bus':
+        case 'buses':
         case 'rers':
         case 'metros':
           l.url = this.config.ratp_api + 'schedules/' + l.type + '/' + l.line.toString().toLowerCase() + '/' + l.stations + '/' + l.destination; // get schedule for that bus
@@ -299,9 +299,9 @@ Module.register("MMM-Paris-RATP-PG",{
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.className = "align-left";
-          if (d.status && this.traffic.indexOf(d.status.message) < 0) {
+          if (d.status && l.hideTraffic.indexOf(d.status.message) < 0 && this.traffic.indexOf(d.status.message) < 0) {
             this.traffic.push(d.status.message);
-            if (this.config.debug) { console.log(this.traffic); }
+            if (this.config.debug) { console.warn(this.traffic); } //to find it more easily
           }
           secondCell.innerHTML = d.status ? l.conversion[d.status.message] || d.status.message.substr(0, l.maxLetters) : 'N/A';
           secondCell.colSpan = 2;
@@ -313,7 +313,7 @@ Module.register("MMM-Paris-RATP-PG",{
             table.appendChild(row);
           }
           break;
-        case "bus":
+        case "buses":
         case "metros":
         case "tramways":
         case "rers":

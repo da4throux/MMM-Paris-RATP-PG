@@ -55,7 +55,7 @@ module.exports = NodeHelper.create({
               self.processPluie(response.body, _l);
               break;
             case 'tramways':
-            case 'bus':
+            case 'buses':
             case 'rers':
             case 'metros':
               self.processRATP(response.body, _l);
