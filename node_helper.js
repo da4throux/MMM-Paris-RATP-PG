@@ -103,7 +103,7 @@ module.exports = NodeHelper.create({
   },
 
   orderResult: function (result) {
-    this.config.reorderPotential;
+    this.config.reorderPotential++;
     let orderChanged = false;
     let schedules = result.schedules;
     if (schedules) {
@@ -165,7 +165,7 @@ module.exports = NodeHelper.create({
 
   processRATP: function(data, _l) {
     this.log (' *** processRATP data received for ' + (_l.label || ''));
-    if (this.config.reorder) {
+    if (this.config.reorder && _l.type == 'rers') {
       this.log ('reordered: ' + this.config.reordered + ' / ' + this.config.reorderPotential);
     }
     this.log (data.result);
