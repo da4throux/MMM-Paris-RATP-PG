@@ -16,7 +16,7 @@ Module.register("MMM-Paris-RATP-PG",{
     animationSpeed: 2000,
     debug: false, //console.log more things to help debugging
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
-    ratp_api: 'https://api-ratp.pierre-grimaud.fr/v3/',
+    ratp_api: 'https://api-ratp.pierre-grimaud.fr/v4/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
     velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_id=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},

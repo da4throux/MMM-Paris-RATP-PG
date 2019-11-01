@@ -47,7 +47,8 @@ module.exports = NodeHelper.create({
       .end(function(response){
         if (response && response.body) {
           if (self.config.debug) {
-            console.log (' *** received answer for: ' + _l.label);
+            console.log (' *** received answer for: ' + (_l.label || ''));
+            console.log (JSON.toString(_l)); //**** to clean up
           }
           switch (_l.type) {
             case'pluie':
@@ -126,7 +127,7 @@ module.exports = NodeHelper.create({
 
   processRATP: function(data, _l) {
     if (this.config.debug) {
-      console.log (' *** processRATP data received for ' + _l.label);
+      console.log (' *** processRATP data received for ' + (_l.label || ''));
       console.log (data.result);
       console.log ('___');
     }
@@ -139,7 +140,7 @@ module.exports = NodeHelper.create({
   processTraffic: function (data, _l) {
     var result, idMaker;
     if (this.config.debug) {
-      console.log('response receive: ');
+      console.log('*** processTraffic response receive: ' + (_l.label || ''));
       console.log(data.result); //line, title, message
       console.log('___');
     }
