@@ -165,7 +165,9 @@ module.exports = NodeHelper.create({
 
   processRATP: function(data, _l) {
     this.log (' *** processRATP data received for ' + (_l.label || ''));
-    this.log ('reordering: ' + this.config.reorder + ' / ' + this.config.reorderPotential);
+    if (this.config.reordered) {
+      this.log ('reordering: ' + this.config.reordered + ' / ' + this.config.reorderPotential);
+    }
     this.log (data.result);
 //      let a = JSON.parse('{"schedules" : [ { "code": "AURA", "message": "20:50", "destination": "Gare du Nord" }, { "code": "ASAR", "message": "00:49", "destination": "Gare du Nord" }, { "code": "AURA", "message": "20:48", "destination": "Gare du Nord" }]}'); // testing schedule if needed
     if (this.config.reorder && _l.type == 'rers' && this.orderResult(data.result)) {
