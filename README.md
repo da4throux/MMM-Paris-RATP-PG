@@ -47,6 +47,10 @@ Three different kind of objects are in the configuration:
 * line: mandatory, typical value: 28 or 'A'... check exact value with: https://api-ratp.pierre-grimaud.fr/v4/lines/buses, https://api-ratp.pierre-grimaud.fr/v4/lines/rers, https://api-ratp.pierre-grimaud.fr/v4/lines/tramways, https://api-ratp.pierre-grimaud.fr/v4/lines/metros
 * stations: mandatory: [name of the station] -> found with https://api-ratp.pierre-grimaud.fr/v4/stations/{type}/{line}
 * destination: mandatory, either 'A' or 'R'
+### rers only
+As destinations do not reveal all the stops for an rer, this allow to filter on code (see https://rera-leblog.fr/les-codes-missions-des-rer-a-dechiffres/)
+* mission1: optional, array of letters ['A', 'E'], default is absent = no filtering //keep only rers for which the first letter is present in the array 
+* mission2: optional, array of letters, default is absent = no filtering //keep only rers for which the second letter is present in the array
 ### Traffic
 * type: mandatory: traffic
 * line: mandatory, based on https://api-ratp.pierre-grimaud.fr/v4/traffic set the line as: [type, line], such as: ['metros', 6], ['rers', 'A']...
@@ -81,6 +85,7 @@ Three different kind of objects are in the configuration:
 * maxLetters: optional, number, default = 70, will limit the string length for traffic and messages
 ## Global element
 * debug: false, //console.log more things to help debugging
+* reorder: optional, boolean, default = false, //option to reorder the RERs schedule (sometimes they are not sent in coming order, but it seems rare)
 ## lineDefault
 * lineDefault contains properties that will be common to all lines, but can be superseed at the line level also: so any property from the line, can be set here also, but the following ones, make more sense here also:
 * conversion: object of key/ values to convert traffic message or destination. Those message can be very long (and limited through maxLetters also), and it might worth to convert them in a simpler text. by default:
@@ -116,4 +121,4 @@ config: {
         ],
 },
 ```
-# v2.4
+# v2.5
