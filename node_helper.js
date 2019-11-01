@@ -29,7 +29,7 @@ module.exports = NodeHelper.create({
       this.config.lines.forEach(function(l){
         setTimeout(function(){
           if (self.config.debug) {
-            console.log (' *** line ' + l.label + ' intial update in ' + l.initialLoadDelay);
+            console.log (' *** line ' + l.label + ' initial update in ' + l.initialLoadDelay);
           }
           self.fetchHandleAPI(l);
         }, l.initialLoadDelay);
@@ -87,7 +87,7 @@ module.exports = NodeHelper.create({
       })
     if (retry) {
       if (this.config.debug) {
-        console.log (' *** line ' + _l.label + ' intial update in ' + _l.updateInterval);
+        console.log (' *** line ' + _l.label + ' initial update in ' + _l.updateInterval);
       }
       setTimeout(function() {
         self.fetchHandleAPI(_l);
