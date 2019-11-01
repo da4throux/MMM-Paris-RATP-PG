@@ -106,8 +106,8 @@ Module.register("MMM-Paris-RATP-PG",{
       console.log (_l.velibHistory);
     }
     return true;
-  }
-  
+  },
+
   // Define start sequence.
   start: function() {
     var l, i;
