@@ -18,7 +18,7 @@ Module.register("MMM-Paris-RATP-PG",{
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v4/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
-    velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_id=',
+    velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     reorder: false, //no reorder of rers schedule (seems to be quite rare)
     reordered: 0,
@@ -68,7 +68,7 @@ Module.register("MMM-Paris-RATP-PG",{
 
   cleanStoreVelibHistory: function(_l, _first) {
     var now = new Date();
-    var j, velib, dock, maxVelibArchiveAge, velibArchiveCleaned, oldHistory;
+    var j, velib, evelib, dock, maxVelibArchiveAge, velibArchiveCleaned, oldHistory;
     if (_first) {
       //récupération de l'historique si existant et cleaning
       _l.velibHistory = localStorage['velib-' + _l.stationId] ? JSON.parse(localStorage['velib-' + _l.stationId]) : [];
@@ -84,13 +84,15 @@ Module.register("MMM-Paris-RATP-PG",{
     if (oldHistory.length > 0 && oldHistory[0].data) {
       oldHistory[0].data.update = oldHistory[0].data.update ? oldHistory[0].data.update : oldHistory[0].lastUpdate;
       _l.velibHistory.push(oldHistory[0]);
-      velib = oldHistory[0].data.numbikesavailable;
-      dock = oldHistory[0].data.numdocksavailable;
+      velib = oldHistory[0].data.nbbike;
+      evelib = oldHistory[0].data.nbebike;
+      dock = oldHistory[0].data.nbfreeedock;
       for (j = 1; j < oldHistory.length; j++) {
-        if (velib !== oldHistory[j].data.numbikesavailable || oldHistory[j].data.numdocksavailable !== dock ) {
+        if (velib !== oldHistory[j].data.nbbike || oldHistory[j].data.nbfreeedock !== dock || evelib != oldHistory[j].data.nbebike) {
           oldHistory[j].data.update = oldHistory[j].data.update ? oldHistory[j].data.update : oldHistory[j].lastUpdate;
-          velib = oldHistory[j].data.numbikesavailable;
-          dock = oldHistory[j].data.numdocksavailable;
+          velib = oldHistory[j].data.nbbike
+          evelib = oldHistory[j].data.nbebike;
+          dock = oldHistory[j].data.nbfreeedock;
           _l.velibHistory.push(oldHistory[j]);
         } else {
           _l.velibHistory[_l.velibHistory.length - 1].lastUpdate = oldHistory[j].lastUpdate;
@@ -104,7 +106,6 @@ Module.register("MMM-Paris-RATP-PG",{
       console.log (_l.velibHistory);
     }
     return true;
- },
 
   // Define start sequence.
   start: function() {
@@ -184,7 +185,7 @@ Module.register("MMM-Paris-RATP-PG",{
         inTime = dataTimeStamp < trendGraph.timeScale; // compute the last one outside of the time window
         if (dataTimeStamp - trendGraph.timeScale < 10 * 60) { //takes it only if it is within 10 minutes of the closing windows
           dataTimeStamp = Math.min(dataTimeStamp, trendGraph.timeScale); //to be sure it does not exit the graph
-          var x, y;
+          var x, y, ye;
           if (l.velibTrendDay) {
             if ( dataTimeStamp  < l.velibTrendZoom ) { //1st third in zoom mode
               x = (1 - dataTimeStamp / l.velibTrendZoom / 3) * trendGraph.width;
@@ -196,9 +197,12 @@ Module.register("MMM-Paris-RATP-PG",{
           } else {
             x = (1 - dataTimeStamp / trendGraph.timeScale) * trendGraph.width;
           }
-          y = l.velibHistory[dataIndex].data['numbikesavailable'] / l.velibHistory[dataIndex].data['capacity'] * trendGraph.height * 4 / 5;
+          y = (l.velibHistory[dataIndex].data['nbbike'] + l.velibHistory[dataIndex].data['nbebike']) / l.velibHistory[dataIndex].data['nbedock'] * trendGraph.height * 4 / 5;
+          ye = (l.velibHistory[dataIndex].data['nbebike']) / l.velibHistory[dataIndex].data['nbedock'] * trendGraph.height * 4 / 5;
           ctx.fillStyle = 'white';
           ctx.fillRect(x, trendGraph.height - y - 1, previousX - x, Math.max(y, 1)); //a thin line even if it's zero
+          ctx.fillStyle = 'blue';
+          ctx.fillRect(x, trendGraph.height - ye - 1, previousX - x, Math.max(ye, 1)); //electric bike graph
           previousX = x;
         }
       }
@@ -210,8 +214,8 @@ Module.register("MMM-Paris-RATP-PG",{
     ctx.textAlign = 'center';
     ctx.fillText(l.label || l.name, trendGraph.width / 2, Math.round(trendGraph.height / 5));
     ctx.textAlign = 'left';
-    ctx.fillText(d.data['numbikesavailable'], 10, trendGraph.height - 10);
-    ctx.fillText(d.data['numdocksavailable'], 10, Math.round(trendGraph.height / 5) + 10);
+    ctx.fillText(d.data['nbbike'] + d.data['nbebike'], 10, trendGraph.height - 10);
+    ctx.fillText(d.data['nbedock'], 10, Math.round(trendGraph.height / 5) + 10);
     if (l.velibTrendDay) {
       ctx.font = Math.round(trendGraph.height / 10) + 'px ' + ctx.font.split(' ').slice(-1)[0];
       ctx.fillText(Math.round(l.velibTrendZoom / 60) + 'mn', trendGraph.width * 5 / 6, trendGraph.height / 2);
@@ -447,9 +451,10 @@ Module.register("MMM-Paris-RATP-PG",{
             secondCell.setAttribute('style', lineColor);
           }
           secondCell.style.align = "center";
-          if (d.data && d.data['is_renting'] === 1) {
-            secondCell.innerHTML = d.data['numbikesavailable'] + '<i id="line-' + i + '-velib" class="fa fa-bicycle' + '"></i>&nbsp';
-            secondCell.innerHTML += d.data['numdocksavailable'] + '<i id="line-' + i + '-velibDock" class="fa fa-unlock' + '"></i>&nbsp';
+          if (d.data && d.data.station_state == 'Operative') { //&&&
+            secondCell.innerHTML = d.data['nbbike'] + '<i id="line-' + i + '-velib" class="fa fa-bicycle' + '"></i>&nbsp';
+            secondCell.innerHTML += d.data['nbebike'] + '<i id="line-' + i + '-velib" class="fa fa-motorcycle' + '"></i>&nbsp';
+            secondCell.innerHTML += d.data['nbfreeedock'] + '<i id="line-' + i + '-velibDock" class="fa fa-unlock' + '"></i>&nbsp';
           } else {
             secondCell.innerHTML = '<i id="line-' + i + '-velib" class="fa fa-window-close' + '"></i>&nbsp';
           }
