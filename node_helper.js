@@ -96,28 +96,40 @@ module.exports = NodeHelper.create({
     }
   },
 
+  log: function (message) {
+    if (this.config.debug) {
+      console.log (message);
+    }
+  },
+
   orderResult: function (result) {
     let orderChanged = false;
     let schedules = result.schedules;
     if (schedules) {
-      schedules.sort( function (a, b) {
+      schedules.sort( function (objA, objB) {
         let dateA, dateB;
+        let a = objA.message, b = objB.message;
         dateA = Date.parse('01/01/2011 ' + a + ':00');
         dateB = Date.parse('01/01/2011 ' + b + ':00');
-        if ((a[0] + a[1] == '23') && (b[0] + b[1] == '00')) {
-          return 1
-        }
-        if ((b[0] + b[1] == '23') && (a[0] + a[1] == '00')) {
+        if ((a[0] == '2') && (b[0] + b[1] == '00')) {
           return -1
         }
+        if ((b[0] == '2') && (a[0] + a[1] == '00')) {
+          orderChanged = true;
+          return 1
+        }
         if (dateA > dateB) {
-          return -1;
-        } else {
+          orderChanged = true;
           return 1;
+        } else {
+          return -1;
         }
       });
     }
-    return schedules;
+    if (orderChanged) {
+      result.schedules = schedules;
+    }
+    return orderChanged;
   },
 
   processAutolib: function (data, _l) {
@@ -150,12 +162,14 @@ module.exports = NodeHelper.create({
   },
 
   processRATP: function(data, _l) {
-    if (this.config.debug) {
-      console.log (' *** processRATP data received for ' + (_l.label || ''));
-      console.log (data.result);
-      console.log (self.orderResult(data.result));
-      console.log ('___');
-    }
+    this.log (' *** processRATP data received for ' + (_l.label || ''));
+    this.log (data.result);
+//      let a = JSON.parse('{"schedules" : [ { "code": "AURA", "message": "20:50", "destination": "Gare du Nord" }, { "code": "ASAR", "message": "00:49", "destination": "Gare du Nord" }, { "code": "AURA", "message": "20:48", "destination": "Gare du Nord" }]}'); // testing schedule if needed
+    if (this.orderResult(data.result)) {
+      this.log (' schedule reordered in :');
+      this.log (data.result);
+    };
+    this.log ('___');
     this.config.infos[_l.id].schedules = data.result.schedules;
     this.config.infos[_l.id].lastUpdate = new Date();
     this.loaded = true;
