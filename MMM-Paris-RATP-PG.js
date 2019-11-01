@@ -320,60 +320,71 @@ Module.register("MMM-Paris-RATP-PG",{
         case "tramways":
         case "rers":
           nexts = d.schedules || [{message: 'N/A', destination: 'N/A'}];
-          for (var rank = 0; (rank < l.maximumEntries) && (rank < nexts.length); rank++) {
+          let currentEntries = 0;
+          for (var rank = 0; (currentEntries < l.maximumEntries) && (rank < nexts.length); rank++) {
+            let showEntry = true;
             n = nexts[rank]; //next transport
-            row = document.createElement("tr");
-            row.id = 'line-' + i + '-' + 'rank';
-            var firstCell = document.createElement("td");
-            firstCell.className = "align-right bright";
-            firstCell.innerHTML = firstLine ? firstCellHeader + (l.label || l.line) : ' ';
-            if (lineColor) {
-              firstCell.setAttribute('style', lineColor);
+            if (l.type == 'rers' && l.mission1 && l.mission1.indexOf(n.code[0]) < 0) {
+                showEntry = false;
             }
-            if (l.firstCellColor) {
-              firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+            if (l.type == 'rers' && l.mission2 && l.mission2.indexOf(n.code[1]) < 0) {
+                showEntry = false;
             }
-            row.appendChild(firstCell);
-            var destinationCell = document.createElement("td");
-            destinationCell.innerHTML = l.conversion[n.destination] || n.destination.substr(0, l.maxLettersForDestination);
-            destinationCell.className = "align-left";
-            if (lineColor) {
-              destinationCell.setAttribute('style', lineColor);
-            }
-            row.appendChild(destinationCell);
-            var depCell = document.createElement("td");
-            depCell.className = "bright";
-            if (l.convertToWaitingTime && /^\d{1,2}[:][0-5][0-9]$/.test(n.message)) {
-              var transportTime = n.message.split(':');
-              var trainDate = new Date(0, 0, 0, transportTime[0], transportTime[1]);
-              var startDate = new Date(0, 0, 0, now.getHours(), now.getMinutes(), now.getSeconds());
-              var waitingTime = trainDate - startDate;
-              if (startDate > trainDate ) {
-                if (startDate - trainDate < 1000 * 60 * 2) {
-                  waitingTime = 0;
-                } else {
-                  waitingTime += 1000 * 60 * 60 * 24;
-                }
+            if (showEntry) {
+              currentEntries++;
+              row = document.createElement("tr");
+              row.id = 'line-' + i + '-' + 'rank';
+              var firstCell = document.createElement("td");
+              firstCell.className = "align-right bright";
+              firstCell.innerHTML = firstLine ? firstCellHeader + (l.label || l.line) : ' ';
+              if (lineColor) {
+                firstCell.setAttribute('style', lineColor);
               }
-              waitingTime = Math.floor(waitingTime / 1000 / 60);
-              depCell.innerHTML = waitingTime + ' mn';
-            } else {
-              depCell.innerHTML = l.conversion[n.message] || n.message.substr(0, l.maxLetters);
+              if (l.firstCellColor) {
+                firstCell.setAttribute('style', 'color:' + l.firstCellColor + ' !important');
+              }
+              row.appendChild(firstCell);
+              var destinationCell = document.createElement("td");
+              destinationCell.innerHTML = l.conversion[n.destination] || n.destination.substr(0, l.maxLettersForDestination);
+              destinationCell.className = "align-left";
+              if (lineColor) {
+                destinationCell.setAttribute('style', lineColor);
+              }
+              row.appendChild(destinationCell);
+              var depCell = document.createElement("td");
+              depCell.className = "bright";
+              if (l.convertToWaitingTime && /^\d{1,2}[:][0-5][0-9]$/.test(n.message)) {
+                var transportTime = n.message.split(':');
+                var trainDate = new Date(0, 0, 0, transportTime[0], transportTime[1]);
+                var startDate = new Date(0, 0, 0, now.getHours(), now.getMinutes(), now.getSeconds());
+                var waitingTime = trainDate - startDate;
+                if (startDate > trainDate ) {
+                  if (startDate - trainDate < 1000 * 60 * 2) {
+                    waitingTime = 0;
+                  } else {
+                    waitingTime += 1000 * 60 * 60 * 24;
+                  }
+                }
+                waitingTime = Math.floor(waitingTime / 1000 / 60);
+                depCell.innerHTML = waitingTime + ' mn';
+              } else {
+                depCell.innerHTML = l.conversion[n.message] || n.message.substr(0, l.maxLetters);
+              }
+              if (lineColor) {
+                depCell.setAttribute('style', lineColor);
+              }
+              row.appendChild(depCell);
+              if (l.concatenateArrivals && !firstLine && (n.destination == previousDestination)) {
+                previousMessage += ' / ' + depCell.innerHTML;
+                previousRow.getElementsByTagName('td')[2].innerHTML = previousMessage;
+              } else {
+                table.appendChild(row);
+                previousRow = row;
+                previousMessage = depCell.innerHTML;
+                previousDestination = n.destination;
+              }
+              firstLine = false;
             }
-            if (lineColor) {
-              depCell.setAttribute('style', lineColor);
-            }
-            row.appendChild(depCell);
-            if (l.concatenateArrivals && !firstLine && (n.destination == previousDestination)) {
-              previousMessage += ' / ' + depCell.innerHTML;
-              previousRow.getElementsByTagName('td')[2].innerHTML = previousMessage;
-            } else {
-              table.appendChild(row);
-              previousRow = row;
-              previousMessage = depCell.innerHTML;
-              previousDestination = n.destination;
-            }
-            firstLine = false;
           }
           break;
         case "pluie":
