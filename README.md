@@ -9,10 +9,10 @@ A module to display:
 * the different buses, metros, rers & tramways, in order to avoid waiting too much for them when leaving home.
 * general traffic information for lines of metros, rers & tramways
 * available autolib, utilib, and station spaces, charging slots
-* available velib (bike and dock - no info on electrical bike yet, accuracy is not great yet)
+* available velib (bike, eBike and dock)
 * rain in the coming hour (as per Meteo France)
 
-# Screenshot
+# Screenshot -needs to be updated with eBike later-on
 ![screenshot](https://github.com/da4throux/MMM-Paris-RATP-PG/blob/master/MMM-Paris-RATP-PG%202.3.png)
 
 # API
@@ -49,7 +49,7 @@ Three different kind of objects are in the configuration:
 * destination: mandatory, either 'A' or 'R'
 ### rers only
 As destinations do not reveal all the stops for an rer, this allow to filter on code (see https://rera-leblog.fr/les-codes-missions-des-rer-a-dechiffres/)
-* mission1: optional, array of letters ['A', 'E'], default is absent = no filtering //keep only rers for which the first letter is present in the array 
+* mission1: optional, array of letters ['A', 'E'], default is absent = no filtering //keep only rers for which the first letter is present in the array
 * mission2: optional, array of letters, default is absent = no filtering //keep only rers for which the second letter is present in the array
 ### Traffic
 * type: mandatory: traffic
@@ -60,16 +60,16 @@ As destinations do not reveal all the stops for an rer, this allow to filter on 
 * converToWaitingTime: optional, boolean, default = true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
 * maxLettersForDestination: optional, int, default = 22, //will limit the length of the destination string
 * concatenateArrivals: optional, boolean, default = true, //if for a transport there is the same destination and several times, they will be displayed on one line
-### autolib
+### autolib - I leave it for nostalgia, but no more velib ... :(
 * type: mandatory: autolib
 * name: mandatory: public name of the station (check  https://opendata.paris.fr/explore/dataset/autolib-disponibilite-temps-reel/ )
 * utilib: optional: boolean: if false: the utilib are aggregated with the bluecar, if true: all three type of cars are detailed
 * backup: optional: public name of the station to backup. If that station (set in backup) is empty (no cars - utilib or not), then only this line is displayed. A use case would be: display this station status only if that other station (nearest to me) is empty. The station (set in backup) should be in the lines before (else there might be a delay in displaying the line).
 ### velib
 * type: mandatory: velib
-* stationId: mandatory: digits: please check the ID from OpenDataParis: https://opendata.paris.fr/explore/dataset/velib-disponibilite-en-temps-reel/ (different from the velib ID as of this commit). For example: Assas - Luxembourg is shown as "13 191 324", and therefore make it a number: 13191324
+* stationId: mandatory: digits: please check the station number from the velib application, then you can check if it works out by putting it at the end of the URL: https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code= For example: Cassini - Denfer-Rochereau is shown as "14111", and therefore: https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code=14111
 * keepVelibHistory: optional: boolean: if true, keeps locally in the browser a day of data regarding the station (to be used if velibGraph is set to true later on)
-* velibGraph: optional: boolean: shows a graph of velib count for the last day (give an idea of the trend)
+* velibGraph: optional: boolean: shows a graph of velib count for the last day (give an idea of the trend), eBike in blue, total in white
 ### Pluie
 * type: mandatory: pluie
 * place: mandatory: integer, example: 751140, take the id from the object returned by: http://www.meteofrance.com/mf3-rpc-portlet/rest/lieu/facet/pluie/search/input=75014 (change 75014 by your postal code)
@@ -114,11 +114,11 @@ config: {
 	  {type: 'traffic', line: ['rers', 'B'], firstCellColor: 'Blue', lineColor: 'green'},
 	  {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', firstCellColor: '#6ECA97'},
 	  {type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Paris', iconSize: 0.70},
-	  {type: 'autolib', name: 'Paris/Henri%20Barbusse/66', label: 'Barbusse', lineColor: 'green'},
-	  {type: 'autolib', name: 'Paris/Michelet/6', label: 'Michelet', utilib: true, backup: 'Paris/Henri%20Barbusse/66'},
-	  {type: 'velib', stationId: 7295, label: 'Montparnasse', velibGraph : false, keepVelibHistory: true},
-	  {type: 'velib', stationId: 13191324, label: 'Assas', velibGraph: true, keepVelibHistory: true},
+//	  {type: 'autolib', name: 'Paris/Henri%20Barbusse/66', label: 'Barbusse', lineColor: 'green'},
+//	  {type: 'autolib', name: 'Paris/Michelet/6', label: 'Michelet', utilib: true, backup: 'Paris/Henri%20Barbusse/66'},
+	  {type: 'velib', stationId: 14111, label: 'Cassini', velibGraph : false, keepVelibHistory: true},
+	  {type: 'velib', stationId: 6018, label: 'Assas', velibGraph: true, keepVelibHistory: true},
         ],
 },
 ```
-# v2.5
+# v2.6
