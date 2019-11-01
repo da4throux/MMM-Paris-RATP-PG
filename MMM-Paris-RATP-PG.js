@@ -124,7 +124,7 @@ Module.register("MMM-Paris-RATP-PG",{
         case 'buses':
         case 'rers':
         case 'metros':
-          if (l.type == 'bus') { l.type == 'buses';} //to avoid update config from v3 to v4
+          if (l.type == 'bus') { l.type = 'buses';} //to avoid update config from v3 to v4
           l.url = this.config.ratp_api + 'schedules/' + l.type + '/' + l.line.toString().toLowerCase() + '/' + l.stations + '/' + l.destination; // get schedule for that bus
           break;
         case 'traffic':
