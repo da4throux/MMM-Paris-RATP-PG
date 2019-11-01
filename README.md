@@ -42,14 +42,14 @@ Three different kind of objects are in the configuration:
 * other elements are global to the module
 ##lines array
 * each line has a type, and each type might have different parameters
-### common to: bus, rers, metros, tramway
-* type: mandatory, value in [bus, rers, metros, tramway]
-* line: mandatory, typical value: 28 or 'A'... check exact value with: https://api-ratp.pierre-grimaud.fr/v3/lines/bus, https://api-ratp.pierre-grimaud.fr/v3/lines/rers, https://api-ratp.pierre-grimaud.fr/v3/lines/tramways, https://api-ratp.pierre-grimaud.fr/v3/lines/metros
-* stations: mandatory: [name of the station] -> found with https://api-ratp.pierre-grimaud.fr/v3/stations/{type}/{line}
+### common to: buses, rers, metros, tramway
+* type: mandatory, value in [buses, rers, metros, tramway]
+* line: mandatory, typical value: 28 or 'A'... check exact value with: https://api-ratp.pierre-grimaud.fr/v4/lines/buses, https://api-ratp.pierre-grimaud.fr/v4/lines/rers, https://api-ratp.pierre-grimaud.fr/v4/lines/tramways, https://api-ratp.pierre-grimaud.fr/v4/lines/metros
+* stations: mandatory: [name of the station] -> found with https://api-ratp.pierre-grimaud.fr/v4/stations/{type}/{line}
 * destination: mandatory, either 'A' or 'R'
 ### Traffic
 * type: mandatory: traffic
-* line: mandatory, based on https://api-ratp.pierre-grimaud.fr/v3/traffic set the line as: [type, line], such as: ['metros', 6], ['rers', 'A']...
+* line: mandatory, based on https://api-ratp.pierre-grimaud.fr/v4/traffic set the line as: [type, line], such as: ['metros', 6], ['rers', 'A']...
 * hideTraffic: optional, array of string, if a traffic status belongs to the array, then the traffic is not shown (see the example for usage)
 ### Common in Transportation lines
 * maximumEntries: optional, int, default = 2, //if the APIs sends several results for the incoming transport how many should be displayed
@@ -102,9 +102,9 @@ config: {
 	  updateInterval: 1 * 2 * 60 * 1000,
 	},
 	lines: [
-	  {type: 'bus', line: 38, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#0055c8'},
-	  {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#dc9600'},
-	  {type: 'bus', line: 91, stations: 'observatoire+++port+royal', destination: 'R', firstCellColor: '#dc9600', lineColor: 'Brown'},
+	  {type: 'buses', line: 38, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#0055c8'},
+	  {type: 'buses', line: 91, stations: 'observatoire+++port+royal', destination: 'A', firstCellColor: '#dc9600'},
+	  {type: 'buses', line: 91, stations: 'observatoire+++port+royal', destination: 'R', firstCellColor: '#dc9600', lineColor: 'Brown'},
 	  {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', firstCellColor: '#7BA3DC'},
 	  {type: 'traffic', line: ['rers', 'B'], firstCellColor: 'Blue', lineColor: 'green'},
 	  {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', firstCellColor: '#6ECA97'},
@@ -116,4 +116,4 @@ config: {
         ],
 },
 ```
-# v2.3
+# v2.4
