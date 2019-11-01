@@ -96,6 +96,30 @@ module.exports = NodeHelper.create({
     }
   },
 
+  orderResult: function (result) {
+    let orderChanged = false;
+    let schedules = result.schedules;
+    if (schedules) {
+      schedules.sort( function (a, b) {
+        let dateA, dateB;
+        dateA = Date.parse('01/01/2011 ' + a + ':00');
+        dateB = Date.parse('01/01/2011 ' + b + ':00');
+        if ((a[0] + a[1] == '23') && (b[0] + b[1] == '00')) {
+          return 1
+        }
+        if ((b[0] + b[1] == '23') && (a[0] + a[1] == '00')) {
+          return -1
+        }
+        if (dateA > dateB) {
+          return -1;
+        } else {
+          return 1;
+        }
+      });
+    }
+    return schedules;
+  },
+
   processAutolib: function (data, _l) {
     this.config.infos[_l.id].lastUpdate = new Date();
     this.config.infos[_l.id].data = data.records[0].fields;
@@ -129,6 +153,7 @@ module.exports = NodeHelper.create({
     if (this.config.debug) {
       console.log (' *** processRATP data received for ' + (_l.label || ''));
       console.log (data.result);
+      console.log (self.orderResult(data.result));
       console.log ('___');
     }
     this.config.infos[_l.id].schedules = data.result.schedules;
