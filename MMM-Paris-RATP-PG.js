@@ -108,6 +108,7 @@ Module.register("MMM-Paris-RATP-PG",{
     var l, i;
     Log.info("Starting module: " + this.name);
     this.config.infos = [];
+    this.traffic = [];
     if (!this.config.lines) {
       this.config.lines = this.config.busStations || []; //v1 legacy support for migration
     }
@@ -298,6 +299,10 @@ Module.register("MMM-Paris-RATP-PG",{
           row.appendChild(firstCell);
           secondCell = document.createElement("td");
           secondCell.className = "align-left";
+          if (d.status && this.traffic.indexOf(d.status.message) < 0) {
+            this.traffic.push(d.status.message);
+            if (this.config.debug) { console.log(this.traffic); }
+          }
           secondCell.innerHTML = d.status ? l.conversion[d.status.message] || d.status.message.substr(0, l.maxLetters) : 'N/A';
           secondCell.colSpan = 2;
           if (lineColor) {
