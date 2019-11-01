@@ -20,6 +20,9 @@ Module.register("MMM-Paris-RATP-PG",{
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
     velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_id=',
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
+    reorder: false, //no reorder of rers schedule (seems to be quite rare)
+    reordered: 0,
+    reorderPotential: 0,
     pluieIconConverter: {
       "Pas de précipitations" : 'wi-day-cloudy',
       "Précipitations faibles": 'wi-day-showers',
