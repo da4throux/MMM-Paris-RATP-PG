@@ -19,6 +19,7 @@ Module.register("MMM-Paris-RATP-PG",{
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v4/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
     velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code=',
+    velib_api_max: 5000, //nb of request max par jour
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     reorder: false, //no reorder of rers schedule (seems to be quite rare)
     reordered: 0,
@@ -110,7 +111,7 @@ Module.register("MMM-Paris-RATP-PG",{
 
   // Define start sequence.
   start: function() {
-    var l, i;
+    var l, i, nb_velib = 0, velibs = [];
     Log.info("Starting module: " + this.name);
     this.config.infos = [];
     this.traffic = [];
@@ -143,6 +144,8 @@ Module.register("MMM-Paris-RATP-PG",{
           break;
         case 'velib':
           l.url = this.config.velib_api + l.stationId;
+          nb_velib++;
+          velibs.push(l);
           if (l.velibGraph || l.keepVelibHistory) {
             this.cleanStoreVelibHistory(l, true);
           }
@@ -151,6 +154,12 @@ Module.register("MMM-Paris-RATP-PG",{
           if (this.config.debug) { console.log('Unknown request type: ' + l.type)}
       }
       this.config.lines[i] = l;
+    }
+    if (nb_velib > 0) {
+      for (i = 0; i < velibs.length; i++) {
+        velibs[i].updateInterval = Math.round(24 * 60 * 60 * 1000 / this.config.velib_api_max / nb_velib);
+      }
+      console.log ('MMM RATP: setting velib update Interval to: ' + Math.round( 24 * 60 * 60 / this.config.velib_api_max / nb_velib));
     }
     this.sendSocketNotification('SET_CONFIG', this.config);
     this.loaded = false;
