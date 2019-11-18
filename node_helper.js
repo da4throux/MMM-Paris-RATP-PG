@@ -143,11 +143,13 @@ module.exports = NodeHelper.create({
 
   processVelib: function (data, _l) {
     var _p = this.config.infos[_l.id];
-    _p.lastUpdate = new Date();
-    _p.data = data.records[0].fields;
-    _p.data.update = new Date();
-    this.loaded = true;
-    this.sendSocketNotification("DATA", this.config.infos);
+    if (data.records) { // else it was missing
+      _p.lastUpdate = new Date();
+      _p.data = data.records[0].fields;
+      _p.data.update = new Date();
+      this.loaded = true;
+      this.sendSocketNotification("DATA", this.config.infos);
+    }
   },
 
   processPluie: function(data, _l) {
