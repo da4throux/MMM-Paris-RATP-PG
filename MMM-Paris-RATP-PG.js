@@ -157,9 +157,9 @@ Module.register("MMM-Paris-RATP-PG",{
     }
     if (nb_velib > 0) {
       for (i = 0; i < velibs.length; i++) {
-        velibs[i].updateInterval = Math.max(Math.round(24 * 60 * 60 * 1000 / this.config.velib_api_max / nb_velib), velibs[i].updateInterval);
+        velibs[i].updateInterval = Math.max(Math.ceil(24 * 60 * 60 / this.config.velib_api_max * nb_velib) * 1000, velibs[i].updateInterval);
       }
-      console.log ('MMM RATP: setting velib update Interval to: ' + Math.round( 24 * 60 * 60 / this.config.velib_api_max / nb_velib) + 's');
+      console.log ('MMM RATP: setting velib update Interval to: ' + Math.ceil( 24 * 60 * 60 / this.config.velib_api_max * nb_velib) + 's');
     }
     this.sendSocketNotification('SET_CONFIG', this.config);
     this.loaded = false;
