@@ -37,6 +37,7 @@ It uses the Open Data from Paris City for Autolib, and Velib
 ```
 
 # specific configuration
+Becareful, configuration changes will only be taken in account once the server side (not only the browser) is restarted.
 Three different kind of objects are in the configuration:
 * lines: an array that contains an object describing each line to be presented by the modules
 * other elements are global to the module
