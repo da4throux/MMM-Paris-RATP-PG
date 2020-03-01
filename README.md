@@ -61,7 +61,7 @@ As destinations do not reveal all the stops for an rer, this allow to filter on 
 * converToWaitingTime: optional, boolean, default = true, // messages received from API can be 'hh:mm' in that case convert it in the waiting time 'x mn'
 * maxLettersForDestination: optional, int, default = 22, //will limit the length of the destination string
 * concatenateArrivals: optional, boolean, default = true, //if for a transport there is the same destination and several times, they will be displayed on one line
-### autolib - I leave it for nostalgia, but no more velib ... :(
+### autolib - I leave it for nostalgia, but no more autolib ... :(
 * type: mandatory: autolib
 * name: mandatory: public name of the station (check  https://opendata.paris.fr/explore/dataset/autolib-disponibilite-temps-reel/ )
 * utilib: optional: boolean: if false: the utilib are aggregated with the bluecar, if true: all three type of cars are detailed
