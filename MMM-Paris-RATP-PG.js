@@ -18,7 +18,7 @@ Module.register("MMM-Paris-RATP-PG",{
     pluie_api:  'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/',
     ratp_api: 'https://api-ratp.pierre-grimaud.fr/v4/',
     autolib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=autolib-disponibilite-temps-reel&refine.public_name=',
-    velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code=',
+    velib_api: 'https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.stationcode=',
     velib_api_max: 5000, //nb of request max par jour
     conversion: { "Trafic normal sur l'ensemble de la ligne." : 'Traffic OK'},
     reorder: false, //no reorder of rers schedule (seems to be quite rare)

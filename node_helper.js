@@ -146,6 +146,10 @@ module.exports = NodeHelper.create({
     if (data.records) { // else it was missing
       _p.lastUpdate = new Date();
       _p.data = data.records[0].fields;
+      _p.data.nbbike = _p.data.mechanical;
+      _p.data.nbebike = _p.data.ebike;
+      _p.data.nbfreeedock = _p.data.numdocksavailable;
+      _p.data.station_state = _p.data.is_renting == "OUI" ? 'Operative' : 'Closed';
       _p.data.update = new Date();
       this.loaded = true;
       this.sendSocketNotification("DATA", this.config.infos);
