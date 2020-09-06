@@ -71,7 +71,7 @@ As destinations do not reveal all the stops for an rer, this allow to filter on 
 * stationId: mandatory: digits: please check the station number from the velib application, then you can check if it works out by putting it at the end of the URL: https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code= For example: Cassini - Denfer-Rochereau is shown as "14111", and therefore: https://opendata.paris.fr/api/records/1.0/search/?dataset=velib-disponibilite-en-temps-reel&refine.station_code=14111
 * keepVelibHistory: optional: boolean: if true, keeps locally in the browser a day of data regarding the station (to be used if velibGraph is set to true later on)
 * velibGraph: optional: boolean: shows a graph of velib count for the last day (give an idea of the trend), eBike in blue, total in white
-### Pluie
+### Pluie [not working as of sept 2020, needs investigation]
 * type: mandatory: pluie
 * place: mandatory: integer, example: 751140, take the id from the object returned by: http://www.meteofrance.com/mf3-rpc-portlet/rest/lieu/facet/pluie/search/input=75014 (change 75014 by your postal code)
 * pluieAsText: optional, boolean, default = false, // show the weather in the coming hour as text and not icons
@@ -114,7 +114,7 @@ config: {
 	  {type: 'rers', line: 'B', stations: 'port+royal', destination: 'A', label: 'B', firstCellColor: '#7BA3DC'},
 	  {type: 'traffic', line: ['rers', 'B'], firstCellColor: 'Blue', lineColor: 'green'},
 	  {type: 'metros', line: '6', stations: 'raspail', destination: 'A', label: '6', firstCellColor: '#6ECA97'},
-	  {type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Paris', iconSize: 0.70},
+//	  {type: 'pluie', place: '751140', updateInterval: 1 * 5 * 60 * 1000, label: 'Paris', iconSize: 0.70}, //not working as of sept 2020
 //	  {type: 'autolib', name: 'Paris/Henri%20Barbusse/66', label: 'Barbusse', lineColor: 'green'},
 //	  {type: 'autolib', name: 'Paris/Michelet/6', label: 'Michelet', utilib: true, backup: 'Paris/Henri%20Barbusse/66'},
 	  {type: 'velib', stationId: 14111, label: 'Cassini', velibGraph : false, keepVelibHistory: true},
@@ -122,4 +122,4 @@ config: {
         ],
 },
 ```
-# v2.6
+# v2.7
