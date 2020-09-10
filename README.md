@@ -80,7 +80,7 @@ As destinations do not reveal all the stops for an rer, this allow to filter on 
 * common means: not shared value, but meaningful for all the lines
 * label: optional: to rename the object differently if needed
 * updateInterval: optional, int, default: 60000, time in ms between pulling request for new times (update request)
-* showUpdateAge: optional, boolean, default = true, //add a circled integer next to the line name showing the tenths digits of the number of seconds elapsed since update.
+* showUpdateAge: optional, boolean, default = true, //add a circled integer such as ①② next to the line name showing the tenths digits of of seconds elapsed since update.
 * firstCellColor: optional, color name, // typically first column of the line (superseed the line color): https://dataratp2.opendatasoft.com/explore/dataset/indices-et-couleurs-de-lignes-du-reseau-ferre-ratp/ or wikipedia can give you insights
 * lineColor: optional, color name, //set the color of the line
 * maxLetters: optional, number, default = 70, will limit the string length for traffic and messages
